@@ -1,0 +1,420 @@
+<TITLE>DaliLite.v5 manual</TITLE>
+DaliLite.v5 is a <A HREF="#install">standalone program</A> for protein structural alignment and structure database search. It is based on the Dali method (Dali stands for distance matrix alignment). It consists of two wrapper scripts: 
+<UL>
+<LI><A HREF="#import">import.pl</A> - convert PDB files to internal data format used by Dali, mirror PDB database
+<LI><A HREF="#dali5">dali.pl</A> - perform pairwise structural alignments, all-against-all comparisons, or structural database searches
+</UL>
+The program was evaluated on the <A HREF=README.benchmark>scope-140 benchmark</A>.
+
+<H3>Contents</H3>
+<PRE>
+
+1 System requirements
+2 Installation
+3 import.pl: Importing structure data
+	3.1 Example: import private structure
+	3.2 Example: import public structures from PDB
+4 Preparing Blast database for structure database search
+5 dali.pl: Structure comparison
+	5.1 Inputs
+	5.2 Outputs
+	5.3 Pairwise comparison examples
+		4.3.1 applymatrix.pl
+	5.4 All-against-all comaprison example
+	5.5 Database search examples
+		5.5.1 Preparatory steps
+		5.5.2 Hierarchical search
+		5.5.3 Knowledge-based search
+	5.6 Lock file
+6 Version history
+7 Contact
+ 
+</PRE>
+
+<H2>1 System requirements</H2>
+<UL>
+<LI>Linux OS
+<LI>openmpi 
+<LI>Fortran-90 and C compilers
+<LI>Perl
+<LI><A HREF=ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/>Blast</A>
+<LI>Internet connection
+</UL>
+openmpi is optional, the software can be run serially. When using the MPI version, all nodes must have read and write access to a common disk (we run it on a multicore server). All nodes read from the internal structure data directories (DALIDATDIR_1 and DALIDATDIR_2) and write intermediate results to the current work directory which must be readable by the master process.
+<P>
+Dali generates structural alignments using only C-alpha coordinates. The database search options use sequence comparison (Blast) for a soft clustering of the PDB. The clustering is used as a filter to select candidates for explicit structural alignment.
+<H2 id="install">2 Installation</H2>
+DaliLite.v5 is a standalone program for protein structural alignment and database search.
+<P>
+ Replace /home/you by the parent directory where DaliLite is installed
+<OL>
+<LI>download
+<PRE>
+        cd /home/you
+        wget http://ekhidna2.biocenter.helsinki.fi/dali/DaliLite.v5.tar.gz
+        tar -zxvf DaliLite.v5.tar.gz
+</PRE>
+<LI>compile
+<PRE>
+        cd /home/you/DaliLite.v5/bin
+        make clean
+        make # ignore Warnings
+        # if using openmpi (check OPENMPI_PATH in Makefile)
+        # make parallel
+</PRE>
+<LI>test
+<PRE>
+        cd /home/you/DaliLite.v5
+        # the script assumes that blastp and makeblastdb are in your PATH
+        # if not, get them from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+        ./test.csh
+        # compare output to ./test_output
+</PRE>
+<LI>usage
+<PRE>
+        /home/you/DaliLite.v5/bin/import.pl
+        /home/you/DaliLite.v5/bin/dali.pl [-h]
+</PRE>
+</OL>
+
+<H2 id="import">3 import.pl: Importing structure data</H2>
+import.pl converts a PDB entry into internal data format used by Dali. It reads files in PDB format and creates the corresponding data files, one for each chain, in the data directory. PDB files can be imported one at a time. The --rsync option maintains a local mirror of the PDB (https://www.rcsb.org/) and imports changed PDB entries automatically. 
+<PRE>
+
+* Import single PDB entry to ./DAT:
+        import.pl --pdbfile &ltfilename&gt --pdbid &ltxxxx&gt [ --dat &ltpath&gt ]
+
+* Import a subset of the PDB archive:
+        bin/import.pl --pdblist &ltfilename&gt [ --dat &ltpath&gt ]
+
+* Automated PDB mirroring:
+        import.pl --rsync [ --pdbmirrordir &ltpath&gt ] [ --dat &ltpath&gt ]
+
+* Options:
+        --dat &ltpath&gt               directory to store imported data [default: ./DAT]
+        --pdbfile &ltfilename&gt       PDB formatted file, may be compressed (.gz). &ltfilename&gt includes path
+        --pdbid &ltxxxx&gt             four-letter PDB identifier
+        --pdblist &ltfilename&gt       list of PDB entries. &ltfilename&gt includes path and must match the pattern pdb????.ent
+        --rsync                    automated PDB mirroring
+        --pdbmirrordir &ltpath&gt      PDB mirror directory [default: /data/pdb]
+        --clean                    remove temporary files
+        --verbose                  verbose
+</PRE>
+
+This is an example of an imported data file (1pptA.dat). Comments have been inserted as lines starting with '#':
+<PRE>
+# The header line gives the structure identifier, number of residues, total number of secondary structure elements (SSEs), number of helices, number of strands, sequence of SSEs 
+&gt&gt&gt&gt 1pptA   36    1    1    0  H
+# For each SSE, list its sequential number, start and end position, modified start and end position, length check code (0 = ok, >0 = short)
+         1        14        31        14        31         0
+# C-alpha coordinates: (x,y,z) triples for each residue sequentially 
+     1.5    -9.0    17.3    -1.1   -10.6    15.0    -0.6   -14.2    14.1     0.5
+   -14.9    10.5    -2.4   -15.0     8.1    -3.5   -18.2     6.3    -3.1   -18.0
+     2.5    -6.6   -18.6     1.0    -5.4   -20.7    -2.0    -4.5   -19.9    -5.6
+    -8.1   -20.4    -6.5    -9.6   -18.1    -4.0   -12.0   -15.4    -5.5   -10.3
+   -11.9    -5.9   -12.1   -10.6    -2.9   -10.5   -13.2    -0.7    -7.0   -12.4
+    -2.1    -7.7    -8.7    -1.4    -8.6    -9.6     2.3    -5.4   -11.8     2.5
+    -3.4    -8.9     1.0    -4.7    -6.5     3.7    -4.0    -8.9     6.5    -0.5
+    -9.7     5.2     0.1    -5.9     5.1    -0.9    -5.6     8.8     1.4    -8.5
+     9.7     4.3    -7.3     7.8     4.1    -3.7     9.3     4.1    -5.4    12.8
+     7.0    -7.7    12.2     9.1    -4.9    10.7     8.0    -2.5    13.7     6.8
+     0.0    11.1     3.1     0.6    11.9     2.8     3.4     9.3
+# Unfolding units in terms of SSEs
+&gt&gt&gt&gt 1pptA    1
+# node identifier, status, parent node, two child nodes, SSEs in this node
+# node status codes: + / above domain level, * / selected domain, - / below domain level, = / small domain
+   1 =    0   0   1   1
+# Unfolding units in terms of residues
+&gt&gt&gt&gt 1pptA    1
+   1 =    0   0  36   1   1  36
+# secondary structure states per residue
+-dssp     "LLLLLLLLLLLLLHHHHHHHHHHHHHHHHHHLLLLL
+# amino acid sequence
+-sequence "GPSQPTYPGDDAPVEDLIRFYDNLQQYLNVVTRHRY
+# COMPND record from PDB entry
+-compnd   " MOLECULE: AVIAN PANCREATIC POLYPEPTIDE;
+# copied from DSSP output: sequential residue number, chain identifier, PDB residue number, accessibility, C-alpha coordinates                         "
+-acc    1  A   1   101       1.500      -9.000      17.300
+# lines for residues 2-35 removed
+-acc   36  A  36   224       2.800       3.400       9.300
+</PRE>
+
+<H3>3.1 Example: import private structure</H3>
+This example imports a private structure to /data/private/DAT:
+
+<PRE>
+        /home/you/DaliLite.v5/bin/import.pl --pdbfile mymodel.pdb --pdbid mine --dat /data/private/DAT --clean
+</PRE>
+import.pl accepts uncompressed and compressed files (extension .gz). Each structure has a four-letter identifier. The length of the identifier must be four, this is hard-coded. The chain identifiers will be appended automatically. The resulting five-letter identifier is used in Dali's internal database; the example would create the file /data/private/DAT/mineA.dat for chain 'A'. Structure comparison requires that all query structures are in one directory (DALIDATDIR_1). Similarly, all target structures must be in one directory (DALIDATDIR_2). DALIDATDIR_1 and DALIDATDIR_2 can be identical, but usually DALIDATDIR_2 contains public structures downloaded from the Protein Data Bank (PDB) and DALIDATDIR_1 contains private structures.
+
+<H3>3.2 Example: import public structures from PDB</H3>
+Database searches require a local copy of PDB structures. The --rsync option maintains a copy of PDB and imports new structures automatically. You can execute the command below from the crontab once a week, which is the update frequency of PDB. 
+PDB entries will be stored under /data/pdb and the structure data in Dali's internal format will be stored in /data/DAT:
+<PRE>
+	/home/you/DaliLite.v5/bin/import.pl --rsync --pdbmirrordir /data/pdb --dat /data/DAT --clean
+</PRE>
+The --rsync option logs the downloaded PDB entries to pdb_update.log. If anything went wrong in the Dali import step, you can extract the list of new PDB files and run the import step again:
+<PRE> 
+	grep '^..\/pdb' pdb_update.log | perl -pe 's/^/\/data\/pdb\//' &gt pdb_new.list # prepend path /data/pdb to PDB entries
+	bin/import.pl --pdblist pdb_new.list --dat /data/DAT --clean
+</PRE>
+
+
+<H2>4 Preparing Blast database for structure database search</H2>
+The structural database search uses sequence comparison as a means of clustering trivially similar structures.
+<P>  
+Install the BLAST executables blastp and makeblastdb from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/. If the blastp program is not in your $PATH (Linux environment variable), you can specify it using the --BLASTP_EXE option of dali.pl. 
+<P>
+The following commands can be used to extract sequences from the imported structures into a FASTA file:
+<PRE>
+	# create pdb.fasta
+	ls /data/DAT/ | perl -pe 's/\.dat//' &gt pdb.list
+	/home/you/DaliLite.v5/bin/dat2fasta.pl /data/DAT < pdb.list | awk -v RS=">" -v FS="\n" -v ORS="" ' { if ($2) print ">"$0 } ' &gt pdb.fasta # awk removes empty sequences
+</PRE>
+Make the PDB sequences searchable by BLAST:
+<PRE>
+	makeblastdb -in pdb.fasta -out /home/you/pdb.blast -dbtype prot
+</PRE>
+The location of the database can be specified using the --BLAST_DB option of dali.pl.
+<P>
+The PDB is highly redundant. Database searches are faster, if a non-redundant subset is searched systematically and homologs of dissimilar structures are eliminated without explicit alignment.
+CD-HIT (from https://github.com/weizhongli/cdhit) can be used to generate non-redundant subsets of PDB. 
+
+We use all-against-all comparison by BLAST and the PDB_SELECT algorithm to generate PDB25, a non-redundant set at 25% sequence identity. Protein sequences which align globally with higher than 25% sequence identity are usually structurally very similar.
+
+
+<H2 id="dali5">5 dali.pl: Structure comparison</H2>
+dali.pl performs pairwise structural alignment and database searches. The full list of options and syntax is given below:
+<PRE>
+
+USAGE: bin/dali.pl [ BASIC-OPTIONS] [MPI-OPTIONS] \
+        ( --cd1 &ltxxxxX&gt |  --pdbfile1 &ltfirst.pdb&gt [ --pdbid1 &ltmol1&gt ] | --query &ltquery.list&gt ) \
+        ( --matrix | --cd2 &ltyyyyY&gt | --pdbfile2 &ltsecond.pdb&gt [ --pdbid2 &ltmol2&gt ] | --db &lttarget.list&gt \
+          [ ( --hierarchical | --walk [WALK-OPTIONS] ) --repset &ltpdb25.list&gt [BLAST-OPTIONS] ] ) 
+
+        --cd1 &ltxxxxX&gt             query structure identifier
+        --pdbfile1 &ltfilename&gt     query structure in PDB format
+        --pdbid1 &ltxxxx&gt           four-letter query structure identifier (chain identifier will be appended automatically) [default: mol1]
+        --query &ltfilename&gt        list of query structure identifiers
+        --matrix                  all-against-all comparison. Generates additional outputs called 'ordered' (similarity matrix) and 'newick_unrooted' (dendrogram).
+        --cd2 &ltxxxxX&gt             target structure identifier
+        --pdbfile2 &ltfilename&gt     target structure in PDB format
+        --pdbid2 &ltyyyyy&gt          four-letter target structure identifier (chain identifier will be appended automatically) [default: mol2]
+        --db &ltfilename&gt           list of target structure identifiers
+        --hierarchical            hierarchical structure database search
+        --walk                    knowledge-based structure database search
+        --repset &ltfilename&gt       list of structure identifiers of non-redundant subset of PDB
+
+        BASIC-OPTIONS:
+        --dat1 &ltpath&gt             path to directory containing query data [default: ./DAT/]
+        --dat2 &ltpath&gt             path to directory containing target data [default: ./DAT/]
+        --oneway                  asymmetric structure comparison (A,B) only [default: symmetric (A,B) and (B,A)]
+        --title &ltstring&gt          written to output [default: test]
+        --outfmt &ltstring&gt         result blocks to output: summary,alignments,equivalences,transrot [default: summary]
+        --clean                   remove temporary files
+
+        MPI-OPTIONS:
+        --np &ltinteger&gt            number of processes if using openmpi (between 1 and 99) [default: 1]
+`       --MPIRUN_EXE &ltstring&gt     location of mpirun executable [default: /usr/lib64/openmpi/bin/mpirun ]
+
+        BLAST-OPTIONS:
+        --HMAX &ltinteger&gt          number of top scoring representatives to send to final BLAST [default: 200]
+        --KMAX &ltinteger&gt          number of final BLAST hits to align structurally [default: 2000]
+        --BLAST_DB &ltstring&gt       location of Blast database [default: pdb.blast]
+        --BLASTP_EXE &ltstring&gt     location of Blast executable [default: blastp]
+        --BLAST_NUM_THREADS &ltinteger&gt   number of threads when runnign Blast [default: 32]
+
+        WALK-OPTIONS:
+        --targetset &ltpdb25.list&gt  used with H to limit the radius of the walk [default: same as --repset]
+        --H &ltinteger&gt             walk radius is Z-score of Hth hit in the target set [default: 100]
+        --MAX_HITS &ltinteger&gt      number of hits returned from walk [default: 10000]
+        --MAX_DALICON &ltinteger&gt   max number of comparisons performed during walk [default: 10000]
+
+
+* Pairwise alignment:
+        bin/dali.pl ( --cd1 &ltxxxxX&gt | --query &ltquery.list&gt ) ( --cd2 &ltyyyyY&gt | --db &lttarget.list&gt ) [BASIC-OPTIONS]
+	bin/dali.pl --pdbfile1 first.pdb [ --pdbid1 mol1 ] --pdbfile2 second.pdb [ --pdbid2 mol2 ] [BASIC-OPTIONS]
+
+* All-against-all comparison:
+        bin/dali.pl --matrix --query &ltquery.list&gt [BASIC-OPTIONS]
+
+* Database searches:
+        bin/dali.pl --hierarchical --repset &ltpdb25.list&gt ( --cd1 &ltxxxxX&gt | --query &ltquery.list&gt ) --db &ltpdb.list&gt [BASIC-OPTIONS] [MPI-OPTIONS] [BLAST-OPTIONS]
+        bin/dali.pl --walk --repset &ltpdb25.list&gt ( --cd1 &ltxxxxX&gt | --query &ltquery.list&gt ) --db &ltpdb.list&gt [BASIC-OPTIONS] [MPI-OPTIONS] [BLAST-OPTIONS] [WALK-OPTIONS]
+
+</PRE>
+<H3>5.1 Inputs</H3>
+All structures must be imported beforehand using import.pl (unless you are using the --pdbfile1 and --pdbfile2 options).  
+You can compare a single query (--cd1) or a list of query structures (--query) against a single target (--cd2) or a list of target structures (--db). 
+Query and target structures are specified by five-letter identifier xxxxX, where the first four letters xxxx refer to the PDB entry and the fifth letter is the chain identifier. 
+
+<H3>5.2 Outputs</H3>
+All functionalities produce outputs in similar format. Structural alignments with a Z-score above 2 are reported. Outputs are xxxxX.txt for each query structure xxxxX.
+Let's use the following example:
+<PRE>
+        # import two PDB entries. They will be split into chains.
+        /home/you/DaliLite.v5/bin/import.pl --pdbfile ./toy_PDB/pdb1ppt.ent.gz --pdbid 1ppt --dat ./DAT > /dev/null
+        /home/you/DaliLite.v5/bin/import.pl --pdbfile ./toy_PDB/pdb1bba.ent.gz --pdbid 1bba --dat ./DAT > /dev/null
+        # pairwise alignment of two structures
+        /home/you/DaliLite.v5/bin/dali.pl --cd1 1pptA --cd2 1bbaA --dat1 ./DAT --dat2 ./DAT --title "output options" --outfmt "summary,alignments,equivalences,transrot" --clean 2> err
+</PRE>
+The output is 1pptA.txt, which looks like this:
+<PRE>
+# Job: output options
+# Query: 1pptA
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  1bba-A  3.6  1.8   33    36   39   MOLECULE: BOVINE PANCREATIC POLYPEPTIDE;
+
+# Pairwise alignments
+
+No 1: Query=1pptA Sbjct=1bbaA Z-score=3.6
+
+DSSP  LLLLLLLLLLLLLHHHHHHHHHHHHHHHHHHLLlll
+Query GPSQPTYPGDDAPVEDLIRFYDNLQQYLNVVTRhry   36
+ident  |  | |||| |  |        |  | |  ||
+Sbjct APLEPEYPGDNATPEQMAQYAAELRRYINMLTRpry   36
+DSSP  LLLLLLLLLLLLLLLHHHHHHHHHHHHHHHHLLlll
+
+
+# Structural equivalences
+   1: 1ppt-A 1bba-A     1 -  33 <=>    1 -  33   (GLY    1  - ARG   33  <=> ALA    1  - ARG   33 )
+
+# Translation-rotation matrices
+-matrix  "1ppt-A 1bba-A  U(1,.)   0.631906 -0.761372 -0.144939           -0.890845"
+-matrix  "1ppt-A 1bba-A  U(2,.)   0.512616  0.550832 -0.658642          -10.882093"
+-matrix  "1ppt-A 1bba-A  U(3,.)   0.581308  0.341902  0.738366            4.946664"
+
+</PRE>
+You can select which blocks to output using the --outfmt option. By default, only the summary block is output. The keyword for blocks 1-4 below are summary, alignments, equivalences, and transrot, respectively.
+The first line of the output file is a job description, which can be set using the --title option.
+
+<OL>
+<LI>At the top is the summary block. Here, we compared 1pptA to just one structure, so there is only one hit. The fields are 
+	<UL>
+	<LI>Chain: structure and chain identifiers of the hits (matched proteins)
+	<LI>Z-score: the summary list is sorted by Z-score. Z-scores above 2 are reported. Hits with higher Z-scores are more similar to the query.
+	<LI>rmsd: root-mean-square-deviation of structurally equivalent C-alpha atoms in 3-D superimposition 
+	<LI>lali: number of structurally equivalent C-alpha atoms
+	<LI>nres: number of residues in the target structure
+	<LI>%id: percentage of identical amino acids out of structurally equivalent residues 
+	<LI>Description: echoed from the COMPND record of the PDB file
+	</UL>
+<LI>The alignments block shows the pairwise alignments of the query and each hit. Uppercase characters are structurally equivalent residues, and lowercase means the residues are unaligned, though they are printed in the same column to save space. The secondary structure states (H=helix, E=strand, L=loop) are shown above/below the amino acid sequences. Identical amino acids are marked by vertical lines. 
+<LI>The structural equivalences block lists the sequential (PDB residue numbers) of structurally aligned segments.
+<LI>Translation-rotation matrices can be used to superimpose the target structure onto the coordinate frame of the query structure. The rotation matrix U is a 3-by-3 matrix given by the first three numeric columns. The translation vector T is given in the last column. Let X be the 3-by-nres matrix of (x,y,z) coordinates of the target structure. UX+T yields the least square superimposition of X onto the query structure.
+</OL>
+
+<H3>5.3 Pairwise comparison examples</H3>
+Pairwise comparison uses only structure data (no sequence data or external programs). All structure data must have been imported beforehand using import.pl to data directory /home/you/DAT.  You can compare two structures to each other:
+<PRE>
+        /home/you/DaliLite.v5/bin/dali.pl --cd1 1pptA --cd2 1bbaA --dat1 /home/you/DAT --dat2 /home/you/DAT --clean 2&gt err
+</PRE>
+You can use lists of structures as queries and targets. Each query will be compared to all targets. The following is equivalent to the example above:
+<PRE>
+	echo 1pptA &gt query.list
+	echo 1bbaA &gt target.list
+        /home/you/DaliLite.v5/bin/dali.pl --query query.list --db target.list --dat1 /home/you/DAT --dat2 /home/you/DAT --clean 2&gt err
+</PRE>
+To systematically compare a set of queries to a non-redundant subset of PDB (prepared beforehand), you can do:
+<PRE>
+        /home/you/DaliLite.v5/bin/dali.pl --query query.list --db pdb25.list --dat1 /home/you/DAT --dat2 /data/DAT --clean 2&gt err
+</PRE>
+<H4>5.3.1 applymatrix.pl</H4>
+A utility script applymatrix.pl superimposes the coordinates of a target structure onto the coordinate frame of the query structure.
+In this example, we first generate a pairwise structural alignment of 1ppt and 1bba, then generate a new PDB file sup.pdb which contains the transformed coordinates of 1bba.
+<PRE>
+	# import PDB structures
+	/home/you/DaliLite.v5/bin/import.pl --pdbfile /home/you/DaliLite.v5/toy_PDB/pdb1ppt.ent.gz --pdbid 1ppt
+        /home/you/DaliLite.v5/bin/import.pl --pdbfile /home/you/DaliLite.v5/toy_PDB/pdb1bba.ent.gz --pdbid 1bba
+	# structural alignment, output translation-rotation matrices to 1pptA.txt
+	/home/you/DaliLite.v5/bin/dali.pl --cd1 1pptA --cd2 1bbaA --dat1 /home/you/DaliLite.v5/DAT --dat2 /home/you/DaliLite.v5/DAT --outfmt "summary,transrot" --clean
+	# transform the coordinates of the original target PDB file
+	/home/you/DaliLite.v5/bin/applymatrix.pl /home/you/DaliLite.v5/toy_PDB/pdb1bba.ent.gz < 1pptA.txt > sup.pdb
+	# we know that 1pptA:1-33 and 1bbaA:1-33 are structurally equivalent segments
+        # peek at the transformed coordinates of 1bba
+	grep ^ATOM sup.pdb | grep ' CA ' | head
+	# compare to 1ppt
+	zcat /home/you/DaliLite.v5/toy_PDB/pdb1ppt.ent.gz | grep ^ATOM | grep ' CA ' | head
+</PRE>
+
+<H3>5.4 All-against-all comparison example</H3>
+The --matrix option works like pairwise comparison with identical query and target lists. Create a list of query structures (file "query.list"):
+<PRE>
+101mA   MYOGLOBIN
+1a00A   HEMOGLOBIN (ALPHA CHAIN)
+1a87A   COLICIN N
+1allA   ALLOPHYCOCYANIN
+1binA   LEGHEMOGLOBIN A
+</PRE>
+The above structures have been imported to the distribution package. Execute the commands
+<PRE>
+        /home/you/DaliLite.v5/bin/dali.pl --matrix --query query.list --dat1 /home/you/DaliLite.v5/DAT --clean 2&gt /dev/null
+</PRE>
+In addition to five xxxxX.txt files, this similarity matrix (file 'ordered') is generated:
+<PRE>
+5
+1a87A   48.7    7.4     3.1     6.4     5.6
+1allA   7.4     29.7    8.1     9.0     8.7
+1binA   3.1     8.1     30.8    15.2    13.6
+101mA   6.4     9.0     15.2    31.7    20.6
+1a00A   5.6     8.7     13.6    20.6    30.5
+</PRE>
+A structural dendrogram is generated from the similarity matrix by average linkage clustering. Branch lengths are converted to <i>ad hoc</i> distances, where the distance is the difference of similarities. Structural dendrograms are output in Newick format (files 'newick' and 'newick_unrooted'): 
+<PRE>
+((((1a00A_HEMOGLOBIN_ALPHA_CHAIN:9.9,101mA_MYOGLOBIN:11.1):6.2,1binA_LEGHEMOGLOBIN_A:16.4):5.8,1allA_ALLOPHYCOCYANIN:21.1):2.975,1a87A_COLICIN_N:43.075);
+</PRE>
+Newick format is accepted by many phylogenetic tree drawing programs.  For example, you can paste the Newick string to <A HREF=https://itol.embl.de/>iTOL</A> or <A HREF=http://phylo.io>phylo.io</A>.
+
+<H3>5.5 Database search examples</H3>
+<H4>5.5.1 Preparatory steps</H4>
+You must mirror the PDB database and prepare a local PDB-Blast database before running structural database searching.
+ 
+<PRE>
+	# mirror PDB
+	/home/you/DaliLite.v5/bin/import.pl --rsync --pdbmirrordir /data/pdb --dat /data/DAT --clean
+	# extract PDB sequences
+	ls /data/DAT/ | perl -pe 's/\.dat//' > pdb.list
+	/home/you/DaliLite.v5/bin/dat2fasta.pl /data/DAT < pdb.list | awk -v RS=">" -v FS="\n" -v ORS="" ' { if ($2) print ">"$0 } ' &gt pdb.fasta # awk removes empty sequences
+	# create PDB-Blast database
+	makeblastdb -in pdb.fasta -out /home/you/pdb.blast -dbtype prot
+	# create PDB70 non-redundant subset of PDB
+	cd-hit -i pdb.fasta -c 0.7 -o pdb70.fasta
+	grep '^>' pdb70.fasta | perl -pe 's/^>//' > pdb70.list
+</PRE>
+PDB70 is conveniently generated using cd-hit. PDB25 can be used instead of PDB70 without loss in performance. However, PDB25 requires all-against-all sequence comparison by Blast.
+<P>
+Remember to import your private PDB structure, if not done yet:
+<PRE>
+        /home/you/DaliLite.v5/bin/import.pl --pdbfile mymodel.pdb --pdbid mine --dat /data/private/DAT --clean
+</PRE>
+
+<H4>5.5.2 Hierarchical search</H4>
+Hierarchical search performs a systematic comparison of query structures against a non-redundant subset of the PDB. Then it uses Blast to identify sequence neighbors of the top scoring hits and adds their structural alignments to the results. 
+<PRE>
+        /home/you/DaliLite.v5/bin/dali.pl --hierarchical --repset pdb70.list --cd1 mineA --db pdb.list --dat1 /data/private/DAT --dat2 /data/pdb --np 40 --clean
+
+</PRE>
+--np <i>npara</i> is the number of parallel processes. The default is <i>npara</i>=1 which will run the serial version of the software and does not require openmpi. Output is generated in nxxxA.txt, where nxxxA is the query identifier. Targets with a Z-score above 2 are reported. There is a size dependence in the Z-score. The low threshold is needed to catch fold level similarities of small domains, but for larger structures there can be thousands of hits in the output. 
+<H4>5.5.3 Knowledge-based search</H4>
+The knowledge-based search uses fast approximate structure comparison methods to find entry points in a sparse network of pre-computed structure similarities. It then proceeds by "walking" to the nearest structural neighbors in iterative fashion.  The knowledge base is accessed remotely over the Internet, therefore you must have an active Internet connection.
+<PRE>
+        /home/you/DaliLite.v5/bin/dali.pl --walk --repset pdb70.list --cd1 mineA --db pdb.list --dat1 /data/private/DAT --dat2 /data/pdb --np 40 --H 100 --targetset pdb70.list --clean
+</PRE>
+ Output is generated in nxxxA.txt, where nxxxA is the query identifier. The knowledge-based search dynamically adjusts the Z-score threshold for output. It aims for complete coverage of hits that have a Z-score higher than the Hth (--H 100) hit belonging to targetset (--targetset pdb70.list). The purpose is to limit the amount of output, yet reach down to interesting fold level similarities. If the query structure contains multiple domains, you are advised to search each domain separately, otherwise hits may be concentrated to one domain leaving others not covered.
+
+<H3>5.6 Lock file</H3>
+DaliLite writes a number of intermediate results in the current working directory (CWD). The lock file is deleted automatically, if the job completed successfully. If a file named dali.lock is present, you get the following error message and cannot start another DaliLite job in the same directory:
+<PRE>
+Directory is locked by dali.lock
+        there may be another DALI process running in this work directory
+         or, the previous run crashed: remove the dali.lock file
+</PRE>
+
+<H2>6 Version history</H2>
+<UL>
+<LI>April 1, 2019: v.5.0 released 
+<LI>June 1, 2019: v.5.1 released
+</UL>
+<H2>7 Contact</H2>
+liisa dot holm at helsinki dot fi
+

@@ -1,0 +1,37 @@
+<html>
+<head>
+    <script type="text/javascript" src="/js/jquery/jquery-1.4.4.min.js" ></script>
+    <script type="text/javascript" src="/js/raphael/raphael-min.js" ></script>
+    <script type="text/javascript" src="/js/jsphylosvg-min.js"></script>
+    <script type="text/javascript" src="/js/yui.js"></script>
+
+    <script type="text/javascript">
+        window.onload = function(){
+                YUI().use('oop', 'json-stringify', 'io-base', 'event', 'event-delegate', function(Y){
+                        var uri = "tree.xml";
+                        function complete(id, o, args) {
+                                var data = o.responseXML; // Response data.
+                                var dataObject = {
+                                                        xml: data,
+                                                        fileSource: true
+                                                };
+                                phylocanvas = new Smits.PhyloCanvas(
+                                        dataObject,
+                                        'svgCanvas',
+                                        800, 800
+//                                      ,'circular'
+                                );
+                        };
+                        Y.on('io:complete', complete, Y);
+                        var request = Y.io(uri); // links to web page
+                });
+        };
+</script>
+
+</head>
+<body>
+    <div>Structural similarity dendrogram.</div>
+The dendrogram is derived by average linkage clustering of the structural similarity matrix (Dali Z-scores).
+    <div id="svgCanvas"> </div>
+</body>
+</html>

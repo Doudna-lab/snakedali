@@ -1,0 +1,60 @@
+<phyloxml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.phyloxml.org http://www.phyloxml.org/1.10/phylo
+xml.xsd" xmlns="http://www.phyloxml.org">
+<phylogeny rooted="true">
+<clade>
+	<clade>
+		<clade>
+			<clade>
+				<clade>
+					<name>101mA MYOGLOBIN</name>
+					<annotation>
+						<desc>MYOGLOBIN</desc>
+						<uri>101mA.html</uri>
+					</annotation>
+					<branch_length>11.1</branch_length>
+				</clade>
+				<clade>
+					<name>1a00A HEMOGLOBIN_ALPHA_CHAIN</name>
+					<annotation>
+						<desc>HEMOGLOBIN_ALPHA_CHAIN</desc>
+						<uri>1a00A.html</uri>
+					</annotation>
+					<branch_length>9.9</branch_length>
+				</clade>
+				<branch_length>6.3</branch_length>
+			</clade>
+			<clade>
+				<name>1binA LEGHEMOGLOBIN_A</name>
+				<annotation>
+					<desc>LEGHEMOGLOBIN_A</desc>
+					<uri>1binA.html</uri>
+				</annotation>
+				<branch_length>16.5</branch_length>
+			</clade>
+			<branch_length>5.7</branch_length>
+		</clade>
+		<clade>
+			<name>1allA ALLOPHYCOCYANIN</name>
+			<annotation>
+				<desc>ALLOPHYCOCYANIN</desc>
+				<uri>1allA.html</uri>
+			</annotation>
+			<branch_length>21.1</branch_length>
+		</clade>
+		<branch_length>3.15</branch_length>
+	</clade>
+	<clade>
+		<name>1a87A COLICIN_N</name>
+		<annotation>
+			<desc>COLICIN_N</desc>
+			<uri>1a87A.html</uri>
+		</annotation>
+		<branch_length>43.25</branch_length>
+	</clade>
+	<branch_length>0.1</branch_length>
+<name>Z=  5.4</name>
+</clade>
+</phylogeny>
+</phyloxml>
+

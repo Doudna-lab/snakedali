@@ -1,0 +1,5 @@
+/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/dsspcmbi ../toy_PDB/pdb1ppt.ent 1ppt.dssp
+ !!! Residue TYR   36 A has  9 instead of expected   8 sidechain atoms.
+     last sidechain atom name is  OXT
+     calculated solvent accessibility includes extra atoms !!!
+

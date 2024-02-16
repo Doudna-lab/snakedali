@@ -1,0 +1,86 @@
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,0)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+# cd1=5cnbA zself=31.6 zcutoff=5.62138772902208
+Initial 5cnbA zcutoff is 5.62138772902208
+# dat2fasta: ../DAT/ 0 inputs
+# run_BLAST blastp -db pdb.blast -num_threads 32 -outfmt '6 qseqid sseqid pident length qlen slen bitscore evalue' -max_target_seqs 2000 -evalue 0.01 
+BLAST job failed
+sh: blastp: command not found
+
+# run_BLAST returned 0:
+
+# got -1 hits from query-BLAST
+# sub wolf(WOLF,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,0)
+wolf: /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ WOLF > /dev/null ; cat fort.1[0-9][0-9] > wolf_output ; rm fort.1[0-9][0-9] ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < wolf_output > /dev/null ; cat fort.1[0-9][0-9] | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/dccp2dalicon.pl > dalicon_input ; rm -f fort.1[0-9][0-9] 
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,0)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+# 5 PDB25 hits above zcutoff=5.62138772902208
+# This is walk(5cnbA,5cnbA.dccp,5.62138772902208,../DAT/,../DAT/,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,10000,10000,HASH(0x5612716062f0),100)
+curl --form cd1=1allA --form zcutoff=5.62138772902208 http://ekhidna2.biocenter.helsinki.fi/cgi-bin/sans/FSSP.cgi
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: ekhidna2.biocenter.helsinki.fi
+curl --form cd1=2nrmA --form zcutoff=5.62138772902208 http://ekhidna2.biocenter.helsinki.fi/cgi-bin/sans/FSSP.cgi
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: ekhidna2.biocenter.helsinki.fi
+curl --form cd1=1binA --form zcutoff=5.62138772902208 http://ekhidna2.biocenter.helsinki.fi/cgi-bin/sans/FSSP.cgi
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: ekhidna2.biocenter.helsinki.fi
+curl --form cd1=101mA --form zcutoff=5.62138772902208 http://ekhidna2.biocenter.helsinki.fi/cgi-bin/sans/FSSP.cgi
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: ekhidna2.biocenter.helsinki.fi
+curl --form cd1=5cnbA --form zcutoff=5.62138772902208 http://ekhidna2.biocenter.helsinki.fi/cgi-bin/sans/FSSP.cgi
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: ekhidna2.biocenter.helsinki.fi
+# 5 PDB25 hits above zcutoff=5.62138772902208
+sh: blastp: command not found
+# got 0 / 0 hits from pdb-BLAST
+# sub wolf(WOLF,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,0)
+wolf: /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ WOLF > /dev/null ; cat fort.1[0-9][0-9] > wolf_output ; rm fort.1[0-9][0-9] ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < wolf_output > /dev/null ; cat fort.1[0-9][0-9] | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/dccp2dalicon.pl > dalicon_input ; rm -f fort.1[0-9][0-9] 
+cat: 'fort.1[0-9][0-9]': No such file or directory
+rm: cannot remove 'fort.1[0-9][0-9]': No such file or directory
+cat: 'fort.1[0-9][0-9]': No such file or directory
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,0)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+cat: 'fort.1[0-9][0-9]': No such file or directory
+rm: cannot remove 'fort.*': No such file or directory
+rm -f fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ PARSI > /dev/null
+cat fort.1[0-9][0-9] > filter_input ; rm -f fort.*; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ FILTER95 < filter_input 
+cat: 'fort.1[0-9][0-9]': No such file or directory
+sort -nr fort.1[0-9][0-9] | uniq | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/pipe96-free.pl 1.0 2 > dalicon_input ; rm -f fort.* 
+sort: cannot read: 'fort.1[0-9][0-9]': No such file or directory
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,0)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+cat: 'fort.1[0-9][0-9]': No such file or directory
+rm: cannot remove 'fort.*': No such file or directory
+# sub wolf(WOLF,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,2)
+wolf: /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ WOLF > /dev/null ; cat fort.1[0-9][0-9] > wolf_output ; rm fort.1[0-9][0-9] ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < wolf_output > /dev/null ; cat fort.1[0-9][0-9] | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/dccp2dalicon.pl > dalicon_input ; rm -f fort.1[0-9][0-9] 
+cat: 'fort.1[0-9][0-9]': No such file or directory
+rm: cannot remove 'fort.1[0-9][0-9]': No such file or directory
+cat: 'fort.1[0-9][0-9]': No such file or directory
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,2)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+cat: 'fort.1[0-9][0-9]': No such file or directory
+rm: cannot remove 'fort.*': No such file or directory
+rm -f fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ PARSI > /dev/null
+cat fort.1[0-9][0-9] > filter_input ; rm -f fort.*; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ FILTER95 < filter_input 
+cat: 'fort.1[0-9][0-9]': No such file or directory
+sort -nr fort.1[0-9][0-9] | uniq | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/pipe96-free.pl 1.0 2 > dalicon_input ; rm -f fort.* 
+sort: cannot read: 'fort.1[0-9][0-9]': No such file or directory
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,2)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+cat: 'fort.1[0-9][0-9]': No such file or directory
+rm: cannot remove 'fort.*': No such file or directory
+Final 5cnbA zcutoff is 5.62138772902208
+# 5cnbA generate_FSSP
+perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/sortdccp.pl < 5cnbA.dccp | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspfilter.pl 5cnbA 2 1 1 | /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fssp 5cnbA 1 ../DAT/ ../DAT/ | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspselect.pl pdb.list 2 1 | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/htmljs.pl ../DAT/ ../DAT/ test "walk" "summary"  > 5cnbA.html 2> 5cnbA.txt

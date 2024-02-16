@@ -1,0 +1,27 @@
+<head>
+  <!-- Plotly.js -->
+  <script src="/js/plotly-latest.min.js"></script>
+</head>
+
+<body>
+        <div>Structural similarity matrix (Dali Z-scores).</div>
+
+  <div id="heatmap"><!-- Plotly chart will be drawn inside this DIV --></div>
+  <script>
+   var data = [
+  {
+    z: [[48.7,7.4,2.4,5.6,6.4],[7.4,29.7,8.1,8.7,9.0],[2.4,8.1,30.8,13.4,15.2],[5.6,8.7,13.4,30.5,20.6],[6.4,9.0,15.2,20.6,31.7]],
+    x: ["1a87A","1allA","1binA","1a00A","101mA"],
+    y: ["1a87A","1allA","1binA","1a00A","101mA"],
+    type: 'heatmap',
+    colorscale: 'Reds'
+  }
+];
+   var layout = { height: 800, width: 800 };
+
+Plotly.newPlot('heatmap', data=data, layout=layout);
+
+  </script>
+
+</body>
+

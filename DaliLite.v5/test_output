@@ -1,0 +1,205 @@
+> > > Importing PDB structures ...
+cd ./test; ../bin/import.pl --pdbfile ../toy_PDB/pdb1ppt.ent --pdbid 1ppt --dat ./
+
+* * * Result of data import: ./test/1pptA.dat * * *
+
+>>>> 1pptA   36    1    1    0  H
+         1        14        31        14        31         0
+     1.5    -9.0    17.3    -1.1   -10.6    15.0    -0.6   -14.2    14.1     0.5
+   -14.9    10.5    -2.4   -15.0     8.1    -3.5   -18.2     6.3    -3.1   -18.0
+     2.5    -6.6   -18.6     1.0    -5.4   -20.7    -2.0    -4.5   -19.9    -5.6
+    -8.1   -20.4    -6.5    -9.6   -18.1    -4.0   -12.0   -15.4    -5.5   -10.3
+   -11.9    -5.9   -12.1   -10.6    -2.9   -10.5   -13.2    -0.7    -7.0   -12.4
+    -2.1    -7.7    -8.7    -1.4    -8.6    -9.6     2.3    -5.4   -11.8     2.5
+    -3.4    -8.9     1.0    -4.7    -6.5     3.7    -4.0    -8.9     6.5    -0.5
+    -9.7     5.2     0.1    -5.9     5.1    -0.9    -5.6     8.8     1.4    -8.5
+     9.7     4.3    -7.3     7.8     4.1    -3.7     9.3     4.1    -5.4    12.8
+     7.0    -7.7    12.2     9.1    -4.9    10.7     8.0    -2.5    13.7     6.8
+     0.0    11.1     3.1     0.6    11.9     2.8     3.4     9.3
+>>>> 1pptA    1
+   1 =    0   0   1   1
+>>>> 1pptA    1
+   1 =    0   0  36   1   1  36
+-dssp     "LLLLLLLLLLLLLHHHHHHHHHHHHHHHHHHLLLLL
+-sequence "GPSQPTYPGDDAPVEDLIRFYDNLQQYLNVVTRHRY
+-compnd   " MOLECULE: AVIAN PANCREATIC POLYPEPTIDE;                              "
+-acc    1  A   1   101       1.500      -9.000      17.300
+-acc    2  A   2    60      -1.100     -10.600      15.000
+-acc    3  A   3   106      -0.600     -14.200      14.100
+-acc    4  A   4   139       0.500     -14.900      10.500
+-acc    5  A   5    26      -2.400     -15.000       8.100
+-acc    6  A   6   126      -3.500     -18.200       6.300
+-acc    7  A   7   121      -3.100     -18.000       2.500
+-acc    8  A   8    55      -6.600     -18.600       1.000
+-acc    9  A   9    27      -5.400     -20.700      -2.000
+-acc   10  A  10   128      -4.500     -19.900      -5.600
+-acc   11  A  11   165      -8.100     -20.400      -6.500
+-acc   12  A  12    17      -9.600     -18.100      -4.000
+-acc   13  A  13    73     -12.000     -15.400      -5.500
+-acc   14  A  14   108     -10.300     -11.900      -5.900
+-acc   15  A  15   111     -12.100     -10.600      -2.900
+-acc   16  A  16    58     -10.500     -13.200      -0.700
+-acc   17  A  17    62      -7.000     -12.400      -2.100
+-acc   18  A  18    91      -7.700      -8.700      -1.400
+-acc   19  A  19   142      -8.600      -9.600       2.300
+-acc   20  A  20    39      -5.400     -11.800       2.500
+-acc   21  A  21   143      -3.400      -8.900       1.000
+-acc   22  A  22    79      -4.700      -6.500       3.700
+-acc   23  A  23    97      -4.000      -8.900       6.500
+-acc   24  A  24    58      -0.500      -9.700       5.200
+-acc   25  A  25    90       0.100      -5.900       5.100
+-acc   26  A  26   112      -0.900      -5.600       8.800
+-acc   27  A  27    56       1.400      -8.500       9.700
+-acc   28  A  28    90       4.300      -7.300       7.800
+-acc   29  A  29    33       4.100      -3.700       9.300
+-acc   30  A  30    21       4.100      -5.400      12.800
+-acc   31  A  31    85       7.000      -7.700      12.200
+-acc   32  A  32    91       9.100      -4.900      10.700
+-acc   33  A  33   215       8.000      -2.500      13.700
+-acc   34  A  34   101       6.800       0.000      11.100
+-acc   35  A  35   180       3.100       0.600      11.900
+-acc   36  A  36   224       2.800       3.400       9.300
+
+> > > Creating Blast database ...
+cd ./test; ls ../DAT | perl -pe 's/\.dat//' > pdb.list; ../bin/dat2fasta.pl ../DAT < pdb.list  | awk -v RS=">" -v FS="\n" -v ORS="" ' { if ($2) print ">"$0 } ' > pdb.fasta
+makeblastdb  -in pdb.fasta -out pdb.blast -dbtype prot
+* * * Blast database done * * *
+
+> > > Starting pairwise comparison ...
+cd ./test; ../bin/dali.pl --pdbfile1 ../toy_PDB/pdb1ppt.ent --pdbfile2 ../toy_PDB/pdb1bba.ent.gz --dat1 ./ --dat2 ./ --outfmt summary,alignments
+
+* * * Result file of pairwise comparison: ./test/mol1A.txt * * *
+
+# Job: test
+# Query: mol1A
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  mol2-A  3.6  1.8   33    36   39   MOLECULE: BOVINE PANCREATIC POLYPEPTIDE;                             
+
+# Pairwise alignments
+
+No 1: Query=mol1A Sbjct=mol2A Z-score=3.6
+
+DSSP  LLLLLLLLLLLLLHHHHHHHHHHHHHHHHHHLLlll
+Query GPSQPTYPGDDAPVEDLIRFYDNLQQYLNVVTRhry   36
+ident  |  | |||| |  |        |  | |  ||   
+Sbjct APLEPEYPGDNATPEQMAQYAAELRRYINMLTRpry   36
+DSSP  LLLLLLLLLLLLLLLHHHHHHHHHHHHHHHHLLlll
+
+
+> > > Starting systematic search ...
+cd ./test; ../bin/dali.pl --cd1 2nrmA --db pdb.list --TITLE systematic --dat1 ../DAT --dat2 ../DAT
+
+* * * Result file of systematic search: ./test/2nrmA.txt * * *
+
+# Job: systematic
+# Query: 2nrmA
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  2nrm-A 30.8  0.0  146   146  100   MOLECULE: MYOGLOBIN;                                                 
+   2:  101m-A 22.3  1.5  146   154   42   MOLECULE: MYOGLOBIN;                                                 
+   3:  5cnb-A 22.3  1.5  145   152   44   MOLECULE: MYOGLOBIN;                                                 
+   4:  1a00-A 17.6  1.9  134   141   28   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   5:  1bin-A 13.3  3.0  131   143   15   MOLECULE: LEGHEMOGLOBIN A;                                           
+   6:  5ohe-A 11.1  3.0  127   152   15   MOLECULE: GLOBIN-COUPLED HISTIDINE KINASE;                           
+   7:  1all-A  7.9  3.2  112   160   12   MOLECULE: ALLOPHYCOCYANIN;                                           
+   8:  1a87-A  6.3  3.2  111   297    9   MOLECULE: COLICIN N;                                                 
+
+> > > Starting hierarchical search ...
+cd ./test; ../bin/dali.pl --cd1 5oheA --db pdb.list --TITLE hierarchical --hierarchical -repset ../matrix_example.list --dat1 ../DAT --dat2 ../DAT
+
+* * * Result file of hierarchical search: ./test/5oheA.txt * * *
+
+# Job: hierarchical
+# Query: 5oheA
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  5ohe-A 30.8  0.0  152   152  100   MOLECULE: GLOBIN-COUPLED HISTIDINE KINASE;                           
+   2:  1a00-A 13.0  3.0  134   141   16   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   3:  101m-A 12.5  2.8  134   154   12   MOLECULE: MYOGLOBIN;                                                 
+   4:  5cnb-A 12.2  2.9  133   152   14   MOLECULE: MYOGLOBIN;                                                 
+   5:  2nrm-A 11.1  3.0  127   146   15   MOLECULE: MYOGLOBIN;                                                 
+   6:  1bin-A 10.2  3.2  128   143   13   MOLECULE: LEGHEMOGLOBIN A;                                           
+   7:  1all-A 10.0  2.9  118   160   10   MOLECULE: ALLOPHYCOCYANIN;                                           
+   8:  1a87-A  8.1  3.3  121   297    8   MOLECULE: COLICIN N;                                                 
+
+> > > Starting knowledge-based search ...
+cd ./test; ../bin/dali.pl --cd1 5cnbA --db pdb.list --walk --repset pdb.list --BLAST_DB pdb.blast --TITLE walk --dat1 ../DAT --dat2 ../DAT
+
+* * * Result file of knowledge-based search: ./test/5cnbA.txt * * *
+
+# Job: walk
+# Query: 5cnbA
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  5cnb-A 31.6  0.0  152   152  100   MOLECULE: MYOGLOBIN;                                                 
+   2:  101m-A 26.8  0.9  152   154   86   MOLECULE: MYOGLOBIN;                                                 
+   3:  2nrm-A 22.3  1.5  145   146   44   MOLECULE: MYOGLOBIN;                                                 
+   4:  1a00-A 20.6  1.6  139   141   27   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   5:  1bin-A 14.6  2.7  138   143   11   MOLECULE: LEGHEMOGLOBIN A;                                           
+   6:  5ohe-A 12.2  2.9  133   152   14   MOLECULE: GLOBIN-COUPLED HISTIDINE KINASE;                           
+   7:  1all-A  8.7  3.3  117   160    9   MOLECULE: ALLOPHYCOCYANIN;                                           
+   8:  1a87-A  6.4  3.2  111   297    5   MOLECULE: COLICIN N;                                                 
+
+> > > Starting all-against-all comparison ...
+cd ./test; ../bin/dali.pl --query ../matrix_example.list --matrix --dat1 ../DAT --dat2 ../DAT --TITLE matrix
+
+* * * Result files of all-against-all comparison: ./test/ordered ./test/newick ./test/newick_unrooted ./test/101mA.txt ./test/1a00A.txt ./test/1a07A.txt ./test/1allA.txt ./test/1binA.txt * * *
+
+5
+1a87A	48.7	7.4	2.4	5.6	6.4
+1allA	7.4	29.7	8.1	8.7	9.0
+1binA	2.4	8.1	30.8	13.4	15.2
+1a00A	5.6	8.7	13.4	30.5	20.6
+101mA	6.4	9.0	15.2	20.6	31.7
+
+(((((101mA_MYOGLOBIN:11.1,1a00A_HEMOGLOBIN_ALPHA_CHAIN:9.9):6.3,1binA_LEGHEMOGLOBIN_A:16.5):5.7,1allA_ALLOPHYCOCYANIN:21.1):3.15,1a87A_COLICIN_N:43.25):5.45);
+
+((((101mA MYOGLOBIN:11.1,1a00A HEMOGLOBIN ALPHA CHAIN:9.9):6.3,1binA LEGHEMOGLOBIN A:16.5):5.7,1allA ALLOPHYCOCYANIN:21.1):3.15,1a87A COLICIN N:43.25);
+
+# Job: matrix
+# Query: 101mA
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  101m-A 31.7  0.0  154   154  100   MOLECULE: MYOGLOBIN;                                                 
+   2:  1a00-A 20.6  1.5  139   141   26   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   3:  1bin-A 15.2  2.6  139   143   12   MOLECULE: LEGHEMOGLOBIN A;                                           
+   4:  1all-A  9.0  3.4  121   160   10   MOLECULE: ALLOPHYCOCYANIN;                                           
+   5:  1a87-A  6.4  3.4  116   297   10   MOLECULE: COLICIN N;                                                 
+
+
+# Job: matrix
+# Query: 1a00A
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  1a00-A 30.5  0.0  141   141  100   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   2:  101m-A 20.6  1.5  139   154   26   MOLECULE: MYOGLOBIN;                                                 
+   3:  1bin-A 13.4  2.9  133   143   12   MOLECULE: LEGHEMOGLOBIN A;                                           
+   4:  1all-A  8.7  3.5  120   160    8   MOLECULE: ALLOPHYCOCYANIN;                                           
+   5:  1a87-A  5.6  3.5  112   297    5   MOLECULE: COLICIN N;                                                 
+
+
+# Job: matrix
+# Query: 1a87A
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  1a87-A 48.7  0.0  297   297  100   MOLECULE: COLICIN N;                                                 
+   2:  1all-A  7.4  2.7  107   160    8   MOLECULE: ALLOPHYCOCYANIN;                                           
+   3:  101m-A  6.4  3.4  116   154   10   MOLECULE: MYOGLOBIN;                                                 
+   4:  1a00-A  5.6  3.5  112   141    5   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   5:  1bin-A  2.4  3.3   71   143    7   MOLECULE: LEGHEMOGLOBIN A;                                           
+
+
+# Job: matrix
+# Query: 1allA
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  1all-A 29.7  0.0  160   160  100   MOLECULE: ALLOPHYCOCYANIN;                                           
+   2:  101m-A  9.0  3.4  121   154   10   MOLECULE: MYOGLOBIN;                                                 
+   3:  1a00-A  8.7  3.5  120   141    8   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   4:  1bin-A  8.1  3.7  116   143    9   MOLECULE: LEGHEMOGLOBIN A;                                           
+   5:  1a87-A  7.4  2.7  107   297    8   MOLECULE: COLICIN N;                                                 
+
+
+# Job: matrix
+# Query: 1binA
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  1bin-A 30.8  0.0  143   143  100   MOLECULE: LEGHEMOGLOBIN A;                                           
+   2:  101m-A 15.2  2.6  139   154   12   MOLECULE: MYOGLOBIN;                                                 
+   3:  1a00-A 13.4  2.9  133   141   12   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   4:  1all-A  8.1  3.7  116   160    9   MOLECULE: ALLOPHYCOCYANIN;                                           
+   5:  1a87-A  2.4  3.3   71   297    7   MOLECULE: COLICIN N;                                                 
+
+

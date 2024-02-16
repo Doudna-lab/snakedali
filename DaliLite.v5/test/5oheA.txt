@@ -1,0 +1,10 @@
+# Job: hierarchical
+# Query: 5oheA
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  5ohe-A 30.8  0.0  152   152  100   MOLECULE: GLOBIN-COUPLED HISTIDINE KINASE;                           
+   2:  1a00-A 13.0  3.0  134   141   16   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   3:  101m-A 12.5  2.8  134   154   12   MOLECULE: MYOGLOBIN;                                                 
+   4:  1bin-A 10.2  3.2  128   143   13   MOLECULE: LEGHEMOGLOBIN A;                                           
+   5:  1all-A 10.0  2.9  118   160   10   MOLECULE: ALLOPHYCOCYANIN;                                           
+   6:  1a87-A  8.1  3.3  121   297    8   MOLECULE: COLICIN N;                                                 
+

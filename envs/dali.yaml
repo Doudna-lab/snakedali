@@ -1,0 +1,40 @@
+name: dali
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1
+  - _openmp_mutex=4.5
+  - binutils_impl_linux-64=2.40
+  - ca-certificates=2024.2.2
+  - gcc=11.4.0
+  - gcc_impl_linux-64=11.4.0
+  - gfortran=11.4.0
+  - gfortran_impl_linux-64=11.4.0
+  - icu=73.2
+  - kernel-headers_linux-64=2.6.32
+  - ld_impl_linux-64=2.40
+  - libevent=2.1.12
+  - libgcc-devel_linux-64=11.4.0
+  - libgcc-ng=13.2.0
+  - libgfortran-ng=13.2.0
+  - libgfortran5=13.2.0
+  - libgomp=13.2.0
+  - libhwloc=2.9.3
+  - libiconv=1.17
+  - libnl=3.9.0
+  - libnuma=2.0.16
+  - libsanitizer=11.4.0
+  - libstdcxx-ng=13.2.0
+  - libxcrypt=4.4.36
+  - libxml2=2.12.5
+  - libzlib=1.2.13
+  - mpi=1.0
+  - openmpi=5.0.1
+  - openssl=3.2.1
+  - perl=5.32.1
+  - rdma-core=50.0
+  - sysroot_linux-64=2.12
+  - ucx=1.15.0
+  - xz=5.2.6
+prefix: /home/danielbr/miniconda3/envs/dali

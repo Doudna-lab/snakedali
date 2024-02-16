@@ -1,0 +1,198 @@
+# matrix option detected
+split_list1: list is 101mA 1a00A 1a87A 1allA 1binA
+Structure 101mA has 154 residues and 5 secondary structure elements
+Structure 1a00A has 141 residues and 5 secondary structure elements
+Structure 1a87A has 297 residues and 17 secondary structure elements
+Structure 1allA has 160 residues and 9 secondary structure elements
+Structure 1binA has 143 residues and 6 secondary structure elements
+# save 101mA in list0
+# save 1a00A in list0
+# save 1a87A in list0
+# save 1allA in list0
+# save 1binA in list0
+cp list0 list2; cp list0 list1
+/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/selfdccp ../DAT/ < list0 | /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare  ../DAT/ ../DAT/ DP > /dev/null ; cat fort.* > 65735.tmp 
+# sub wolf(WOLF,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,1)
+wolf: /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ WOLF > /dev/null ; cat fort.1[0-9][0-9] > wolf_output ; rm fort.1[0-9][0-9] ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < wolf_output > /dev/null ; cat fort.1[0-9][0-9] | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/dccp2dalicon.pl > dalicon_input ; rm -f fort.1[0-9][0-9] 
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,1)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+rm -f fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ PARSI > /dev/null
+cat fort.1[0-9][0-9] > filter_input ; rm -f fort.*; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ FILTER95 < filter_input 
+sort -nr fort.1[0-9][0-9] | uniq | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/pipe96-free.pl 1.0 2 > dalicon_input ; rm -f fort.* 
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,1)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+# sub dalicon(dalicon_input,F,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,1)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON F < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ PARSI12 < list12 > /dev/null
+cat fort.1[0-9][0-9] > filter_input ; rm -f fort.*; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ FILTER95 < filter_input 
+cat: 'fort.1[0-9][0-9]': No such file or directory
+sort -nr fort.1[0-9][0-9] | uniq | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/pipe96-free.pl 1.0 2 > dalicon_input ; rm -f fort.* 
+sort: cannot read: 'fort.1[0-9][0-9]': No such file or directory
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,1)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+cat: 'fort.1[0-9][0-9]': No such file or directory
+rm: cannot remove 'fort.*': No such file or directory
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,1)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+cat: 'fort.1[0-9][0-9]': No such file or directory
+rm: cannot remove 'fort.*': No such file or directory
+/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ PARSI12 < list12 > /dev/null
+cat fort.1[0-9][0-9] > filter_input ; rm -f fort.*; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ FILTER95 < filter_input 
+cat: 'fort.1[0-9][0-9]': No such file or directory
+sort -nr fort.1[0-9][0-9] | uniq | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/pipe96-free.pl 1.0 2 > dalicon_input ; rm -f fort.* 
+sort: cannot read: 'fort.1[0-9][0-9]': No such file or directory
+# sub dalicon(dalicon_input,T,/wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare,../DAT/,../DAT/,1)
+# /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DALICON T < dalicon_input > /dev/null
+# cat fort.1[0-9][0-9] > dp_input ; rm fort.* ; /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/serialcompare ../DAT/ ../DAT/ DP < dp_input > /dev/null
+cat: 'fort.1[0-9][0-9]': No such file or directory
+rm: cannot remove 'fort.*': No such file or directory
+z-summa of 101mA is 51.2
+z-summa of 1a00A is 48.3
+z-summa of 1a87A is 21.8
+z-summa of 1allA is 33.2
+z-summa of 1binA is 39.1
+#anno of 101mA is MYOGLOBIN
+#anno of 1a00A is HEMOGLOBIN ALPHA CHAIN
+#anno of 1a87A is COLICIN N
+#anno of 1allA is ALLOPHYCOCYANIN
+#anno of 1binA is LEGHEMOGLOBIN A
+# init newick 1 as 101mA MYOGLOBIN
+# init newick 2 as 1a00A HEMOGLOBIN ALPHA CHAIN
+# init newick 3 as 1a87A COLICIN N
+# init newick 4 as 1allA ALLOPHYCOCYANIN
+# init newick 5 as 1binA LEGHEMOGLOBIN A
+# internal node 1:11.1 2:9.9 (101mA MYOGLOBIN:11.1,1a00A HEMOGLOBIN ALPHA CHAIN:9.9)
+# internal node 1:6.3 5:16.5 ((101mA MYOGLOBIN:11.1,1a00A HEMOGLOBIN ALPHA CHAIN:9.9):6.3,1binA LEGHEMOGLOBIN A:16.5)
+# internal node 1:5.7 4:21.1 (((101mA MYOGLOBIN:11.1,1a00A HEMOGLOBIN ALPHA CHAIN:9.9):6.3,1binA LEGHEMOGLOBIN A:16.5):5.7,1allA ALLOPHYCOCYANIN:21.1)
+# internal node 1:3.15 3:43.25 ((((101mA MYOGLOBIN:11.1,1a00A HEMOGLOBIN ALPHA CHAIN:9.9):6.3,1binA LEGHEMOGLOBIN A:16.5):5.7,1allA ALLOPHYCOCYANIN:21.1):3.15,1a87A COLICIN N:43.25)
+got (101mA,MYOGLOBIN) from 101mA_MYOGLOBIN
+got (1a00A,HEMOGLOBIN_ALPHA_CHAIN) from 1a00A_HEMOGLOBIN_ALPHA_CHAIN
+got (1binA,LEGHEMOGLOBIN_A) from 1binA_LEGHEMOGLOBIN_A
+got (1allA,ALLOPHYCOCYANIN) from 1allA_ALLOPHYCOCYANIN
+got (1a87A,COLICIN_N) from 1a87A_COLICIN_N
+# patch before: <phyloxml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.phyloxml.org http://www.phyloxml.org/1.10/phylo
+xml.xsd" xmlns="http://www.phyloxml.org">
+<phylogeny rooted="true">
+<clade>
+	<clade>
+		<clade>
+			<clade>
+				<clade>
+					<name>101mA MYOGLOBIN</name>
+					<annotation>
+						<desc>MYOGLOBIN</desc>
+						<uri>101mA.html</uri>
+					</annotation>
+					<branch_length>11.1</branch_length>
+				</clade>
+				<clade>
+					<name>1a00A HEMOGLOBIN_ALPHA_CHAIN</name>
+					<annotation>
+						<desc>HEMOGLOBIN_ALPHA_CHAIN</desc>
+						<uri>1a00A.html</uri>
+					</annotation>
+					<branch_length>9.9</branch_length>
+				</clade>
+				<branch_length>6.3</branch_length>
+			</clade>
+			<clade>
+				<name>1binA LEGHEMOGLOBIN_A</name>
+				<annotation>
+					<desc>LEGHEMOGLOBIN_A</desc>
+					<uri>1binA.html</uri>
+				</annotation>
+				<branch_length>16.5</branch_length>
+			</clade>
+			<branch_length>5.7</branch_length>
+		</clade>
+		<clade>
+			<name>1allA ALLOPHYCOCYANIN</name>
+			<annotation>
+				<desc>ALLOPHYCOCYANIN</desc>
+				<uri>1allA.html</uri>
+			</annotation>
+			<branch_length>21.1</branch_length>
+		</clade>
+		<branch_length>3.15</branch_length>
+	</clade>
+	<clade>
+		<name>1a87A COLICIN_N</name>
+		<annotation>
+			<desc>COLICIN_N</desc>
+			<uri>1a87A.html</uri>
+		</annotation>
+		<branch_length>43.25</branch_length>
+	</clade>
+	<branch_length>0.1</branch_length>
+</clade>
+
+# patch after: <phyloxml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.phyloxml.org http://www.phyloxml.org/1.10/phylo
+xml.xsd" xmlns="http://www.phyloxml.org">
+<phylogeny rooted="true">
+<clade>
+	<clade>
+		<clade>
+			<clade>
+				<clade>
+					<name>101mA MYOGLOBIN</name>
+					<annotation>
+						<desc>MYOGLOBIN</desc>
+						<uri>101mA.html</uri>
+					</annotation>
+					<branch_length>11.1</branch_length>
+				</clade>
+				<clade>
+					<name>1a00A HEMOGLOBIN_ALPHA_CHAIN</name>
+					<annotation>
+						<desc>HEMOGLOBIN_ALPHA_CHAIN</desc>
+						<uri>1a00A.html</uri>
+					</annotation>
+					<branch_length>9.9</branch_length>
+				</clade>
+				<branch_length>6.3</branch_length>
+			</clade>
+			<clade>
+				<name>1binA LEGHEMOGLOBIN_A</name>
+				<annotation>
+					<desc>LEGHEMOGLOBIN_A</desc>
+					<uri>1binA.html</uri>
+				</annotation>
+				<branch_length>16.5</branch_length>
+			</clade>
+			<branch_length>5.7</branch_length>
+		</clade>
+		<clade>
+			<name>1allA ALLOPHYCOCYANIN</name>
+			<annotation>
+				<desc>ALLOPHYCOCYANIN</desc>
+				<uri>1allA.html</uri>
+			</annotation>
+			<branch_length>21.1</branch_length>
+		</clade>
+		<branch_length>3.15</branch_length>
+	</clade>
+	<clade>
+		<name>1a87A COLICIN_N</name>
+		<annotation>
+			<desc>COLICIN_N</desc>
+			<uri>1a87A.html</uri>
+		</annotation>
+		<branch_length>43.25</branch_length>
+	</clade>
+	<branch_length>0.1</branch_length>
+<name>Z=  5.4</name>
+</clade>
+
+perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/sortdccp.pl < 101mA.dccp | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspfilter.pl 101mA 2 1 1 | /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fssp 101mA 4 ../DAT/ ../DAT/ | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspselect.pl list0 2 1 | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/htmljs.pl ../DAT/ ../DAT/ test "matrix" "summary"  > 101mA.html 2> 101mA.txt
+perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/sortdccp.pl < 1a00A.dccp | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspfilter.pl 1a00A 2 1 1 | /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fssp 1a00A 4 ../DAT/ ../DAT/ | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspselect.pl list0 2 1 | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/htmljs.pl ../DAT/ ../DAT/ test "matrix" "summary"  > 1a00A.html 2> 1a00A.txt
+perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/sortdccp.pl < 1a87A.dccp | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspfilter.pl 1a87A 2 1 1 | /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fssp 1a87A 4 ../DAT/ ../DAT/ | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspselect.pl list0 2 1 | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/htmljs.pl ../DAT/ ../DAT/ test "matrix" "summary"  > 1a87A.html 2> 1a87A.txt
+perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/sortdccp.pl < 1allA.dccp | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspfilter.pl 1allA 2 1 1 | /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fssp 1allA 4 ../DAT/ ../DAT/ | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspselect.pl list0 2 1 | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/htmljs.pl ../DAT/ ../DAT/ test "matrix" "summary"  > 1allA.html 2> 1allA.txt
+perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/sortdccp.pl < 1binA.dccp | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspfilter.pl 1binA 2 1 1 | /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fssp 1binA 4 ../DAT/ ../DAT/ | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/fsspselect.pl list0 2 1 | perl /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/bin/htmljs.pl ../DAT/ ../DAT/ test "matrix" "summary"  > 1binA.html 2> 1binA.txt
+rm -f  fort.*

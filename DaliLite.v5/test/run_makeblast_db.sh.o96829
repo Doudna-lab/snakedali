@@ -1,0 +1,10 @@
+
+
+Building a new DB, current time: 02/14/2024 13:56:55
+New DB name:   /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/test/pdb.blast
+New DB title:  pdb.seq
+Sequence type: Protein
+Deleted existing Protein BLAST database named /wynton/home/doudna/bellieny-rabelo/DaliLite.v5/test/pdb.blast
+Keep MBits: T
+Maximum file size: 3000000000B
+/var/spool/sge/wynton/qb3-as17/job_scripts/96829: line 7: 118570 Bus error               (core dumped) makeblastdb -in pdb.seq -out pdb.blast -dbtype prot

@@ -1,0 +1,10 @@
+>>>> mol2A    0    0    0    0
+
+>>>> mol2A    1
+   1 =    0   0   0
+>>>> mol2A    1
+   1 =    0   0  36   1   1  36
+-dssp     "
+-sequence "
+-compnd   " MOLECULE: BOVINE PANCREATIC POLYPEPTIDE;                             "
+-acc 

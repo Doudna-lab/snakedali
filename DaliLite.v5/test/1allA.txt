@@ -1,0 +1,9 @@
+# Job: matrix
+# Query: 1allA
+# No:  Chain   Z    rmsd lali nres  %id PDB  Description
+   1:  1all-A 29.7  0.0  160   160  100   MOLECULE: ALLOPHYCOCYANIN;                                           
+   2:  101m-A  9.0  3.4  121   154   10   MOLECULE: MYOGLOBIN;                                                 
+   3:  1a00-A  8.7  3.5  120   141    8   MOLECULE: HEMOGLOBIN (ALPHA CHAIN);                                  
+   4:  1bin-A  8.1  3.7  116   143    9   MOLECULE: LEGHEMOGLOBIN A;                                           
+   5:  1a87-A  7.4  2.7  107   297    8   MOLECULE: COLICIN N;                                                 
+
