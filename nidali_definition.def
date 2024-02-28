@@ -10,9 +10,14 @@ Stage: build
     VERSION=22.04
     DEBIAN_FRONTEND=noninteractive
 
+# Inherit files from the host
+    DaliLite.v5/ /opt
+
 # Environment
 %environment
     PATH="/opt/DaliLite.v5/bin:${PATH}"
+    # Assign path to openmpi
+    export OPENMPI_PATH=/home/danielbr/miniconda3/envs/dali/bin/
     export LC_ALL=C
 
 # Commands
