@@ -1,0 +1,44 @@
+# Bootstrap (using docker image)
+Bootstrap: docker
+From: ubuntu:{{ VERSION }}
+
+# Stage: Build
+Stage: build
+
+# Arguments
+%arguments
+    VERSION=22.04
+    DEBIAN_FRONTEND=noninteractive
+
+# Environment
+%environment
+    PATH="/opt/DaliLite.v5/bin:${PATH}"
+    export LC_ALL=C
+
+# Commands
+%pre-commands
+  apt-get update
+
+# Commands (combined with %pre-commands)
+%commands
+  apt-get install -y --no-install-recommends \
+    build-essential \
+    gfortran \
+    libopenmpi-dev \
+    openmpi-bin \
+    perl \
+    wget \
+    csh \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+  cd /opt/DaliLite.v5/bin
+  make clean
+  make
+
+# Note: Apptainer does not recommend setting permissions with `chmod` in the definition file for security reasons.
+#       Consider passing arguments or setting permissions at runtime if needed.
+
+# CMD (optional)
+# %cmd ["/bin/bash"]
+# %cmd ["csh", "/opt/DaliLite.v5/test.csh"]
