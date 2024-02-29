@@ -1,0 +1,29 @@
+Bootstrap: docker
+From: centos:8
+Stage: build
+
+%files
+    DaliLite.v5/ /opt
+
+%environment
+    PATH="/opt/DaliLite.v5/bin:${PATH}"
+    export OPENMPI_PATH=/usr/bin/
+    export LC_ALL=C
+
+%post
+    cd /etc/yum.repos.d/
+    sed -i -e "s|mirrorlist=|#mirrorlist=|g" /etc/yum.repos.d/CentOS-*
+    sed -i -e "s|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" /etc/yum.repos.d/CentOS-*
+
+    yum install -y make gcc \
+    gcc-gfortran \
+    openmpi-devel \
+    openmpi \
+    perl \
+    tcsh
+
+    yum clean all
+
+    cd /opt/DaliLite.v5/bin
+    make clean
+    make
