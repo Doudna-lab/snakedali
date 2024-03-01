@@ -20,7 +20,7 @@ my $BLAST_NUM_THREADS=32;
 my $tmpblastin="$$.fasta";
 my $tmpblastout="$$.blast";
 # dali programs
-my $MPIRUN_EXE=  "/usr/bin/mpirun "; #auxiliary_lib::which('mpirun'); #"/usr/lib64/openmpi/bin/mpirun "; #-output-filename x  ";
+my $MPIRUN_EXE="/usr/lib64/openmpi/bin/mpirun "; #-output-filename x  ";
 my $MPIDALI_BIN=$FindBin::Bin;
 my $MPICOMPARE_EXE="$MPIDALI_BIN/mpicompare";
 my $SERIALCOMPARE_EXE="$MPIDALI_BIN/serialcompare";

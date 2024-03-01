@@ -25,5 +25,6 @@ Stage: build
     yum clean all
 
     cd /opt/DaliLite.v5/bin
+    chmod 755 -R /opt/DaliLite.v5/
     make clean
-    make
+    make parallel
