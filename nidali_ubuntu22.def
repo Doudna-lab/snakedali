@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: ubuntu:22.04
+Stage: build
+
+%files
+    DaliLite.v5/ /opt
+
+%environment
+    PATH="/opt/DaliLite.v5/bin:${PATH}"
+    export OPENMPI_PATH=/usr/bin/
+    export LC_ALL=C
+
+%post
+    apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y make \
+    gcc \
+    gfortran \
+    openmpi-bin \
+    libopenmpi-dev \
+    perl \
+    tcsh \
+    && rm -rf /var/lib/apt/lists/*
+
+    mkdir -p /usr/lib64/openmpi/bin/
+    ln -s -t /usr/lib64/openmpi/bin/ /usr/bin/mpif90
+    ln -s -t /usr/lib64/openmpi/bin/ /usr/bin/mpirun
+
+    cd /opt/DaliLite.v5/bin
+    chmod 755 -R /opt/DaliLite.v5/
+    make clean
+    make
