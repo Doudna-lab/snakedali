@@ -48,7 +48,7 @@ rule dali_run:
 	params:
 		query_dir = "{run}/query_DAT"
 	singularity:
-		"nidali_mpi.sif"
+		"nidali.sif"
 	threads:
 		config["threads"]
 	message:
@@ -72,5 +72,4 @@ DAT database:
 		--dat2 {input.dat_database} \
 		--oneway \
 		--outfmt "summary,alignments" \
-		--clean
         """

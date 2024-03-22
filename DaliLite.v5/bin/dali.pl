@@ -251,7 +251,7 @@ if($PDB90_list) {
 
 
 # lock directory
-&lock();
+# &lock();
 
 # main loop
 if($matrix) { # all against all structure comparisons: generates extra outputs
@@ -287,7 +287,7 @@ if($clean) {
 }
 
 # unlock directory
-&unlock();
+# &unlock();
 
 exit();
 

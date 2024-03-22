@@ -1,0 +1,4 @@
+# cluster.yaml - cluster configuration for my Snakefile.
+__default__:
+  time: '4:00:00'
+  cores: 2

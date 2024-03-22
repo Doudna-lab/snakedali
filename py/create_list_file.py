@@ -8,11 +8,9 @@ from sys import argv
 def main():
 	# Snakemake I/O
 	# === Inputs
-	source_dat_path = os.path.join(str(argv[1]))
-	# === Wildcards
-	batch_index = argv[2]
+	source_dat_path = str(snakemake.input.dat_database)
 	# === Outputs
-	dat_list_file = os.path.join(source_dat_path, str(argv[3]), "_", batch_index)
+	dat_list_file = str(snakemake.output.dat_list_file)
 
 	names_list = []
 
