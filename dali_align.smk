@@ -14,39 +14,60 @@ import glob
 rule all:
 	input:
 		#
-		expand("{run}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt",
-			run=config["run"],batch_index=batch_index),
+		expand("{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt",
+			db_dir=config["db_dir"],batch_index=batch_index),
 		#
-		expand("{run}/nidali_search_output/{query_name}/{query_name}_batch_{batch_index}",
-			run=config["run"],query_name=config["query_name"], batch_index=batch_index),
+		expand("{db_dir}/results_{batch_index}",
+			db_dir=config["db_dir"],batch_index=batch_index),
+		#
+		expand("{db_dir}/pdb_files_DAT/batch_{batch_index}/{query_name}.txt",
+			db_dir=config["db_dir"],query_name=config["query_name"], batch_index=batch_index),
 
 rule create_list_input:
 	input:
-		dat_database= lambda wildcards: glob.glob("{db_dir}/pdb_files_DAT/batch_{batch_index}".format(
-			db_dir=config['db_dir'],batch_index=wildcards.batch_index))
+		dat_database = "{db_dir}/pdb_files_DAT/batch_{batch_index}"
 	output:
-		output_list = "{run}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt"
+		target_entries_list = "{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt"
 	message:
 		"""
-Perform sequence alignments with DaliLIte:
 Create list of inputs on: 
-	--> {output.output_list} 
-DAT database: 
+	--> {output.target_entries_list} 
+Based on DAT database: 
 	--> {input.dat_database}
 		"""
 	script:
 		"py/create_list_file.py"
 
+rule setup_outdir:
+	input:
+		target_entries_list = "{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt",
+	output:
+		directory("{db_dir}/results_{batch_index}"),
+	message:
+		"""
+Anchor on: 
+	--> {input.target_entries_list} 
+Set up output directory: 
+	--> {output}	
+		"""
+	shell:
+		"""
+		mkdir -p {output}
+		"""
+
 rule dali_run:
 	input:
-		query_dat = lambda wildcards: glob.glob("{db_dir}/query_DAT/{query_name}.dat".format(
-			db_dir=config['db_dir'],query_name=wildcards.query_name)),
-		dat_database=lambda wildcards: glob.glob("{db_dir}/pdb_files_DAT/batch_{batch_index}".format(
-			db_dir=config['db_dir'],batch_index=wildcards.batch_index)),
+		query_dat = "{db_dir}/query_DAT/{query_name}.dat",
+		tracked_outdir="{db_dir}/results_{batch_index}",
+		target_entries_list = "{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt"
 	output:
-		output_dir = "{run}/nidali_search_output/{query_name}/{query_name}_batch_{batch_index}"
+		temp_output_dali ="{db_dir}/pdb_files_DAT/batch_{batch_index}/{query_name}.txt"
 	params:
-		query_dir = "{run}/query_DAT"
+		query_dir="{db_dir}/query_DAT",
+		dat_database = "{db_dir}/pdb_files_DAT/batch_{batch_index}",
+		output_dali = lambda wildcards: glob.glob("{run}".format(
+			run=config["run"]
+		))
 	singularity:
 		"nidali_mpi.sif"
 	threads:
@@ -59,18 +80,23 @@ Query path:
 Query ID:
 	--> {wildcards.query_name}
 Target DB:
-	--> {wildcards.batch_index}
+	--> {input.target_entries_list}
 DAT database:
-	--> {input.dat_database}
+	--> {params.dat_database}
+OUTPUT:
+	--> {params.output_dali}
 		"""
 	shell:
 		"""
+		cd {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}
 		dali.pl \
 		--cd1 {wildcards.query_name} \
-		--db batch_{wildcards.batch_index} \
+		--db {input.target_entries_list} \
 		--dat1 {params.query_dir} \
-		--dat2 {input.dat_database} \
+		--dat2 {params.dat_database} \
 		--oneway \
 		--outfmt "summary,alignments" \
+		--title {output.temp_output_dali} \
 		--clean
+		mv {output.temp_output_dali} {params.output_dali}
         """

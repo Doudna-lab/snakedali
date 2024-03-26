@@ -1,8 +1,11 @@
 # === Directory- and File Paths
 # Path to parent directory where query and database are stored
 run: "/scratch/bellieny-rabelo/nidali_output"
-#
+# "/scratch/bellieny-rabelo/nidali_output"
+# "/groups/doudna/projects/daniel_projects/yoon_ph/nidali_smk_output"
 db_dir: "/wynton/home/doudna/bellieny-rabelo/nidali_db"
+#  "/groups/doudna/projects/daniel_projects/yoon_ph"
+# "/wynton/home/doudna/bellieny-rabelo/nidali_db"
 
 threads: 1
 
