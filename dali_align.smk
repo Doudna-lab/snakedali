@@ -1,5 +1,10 @@
 # **** Variables ****
-configfile: "config/dali_align.yaml"
+# configfile: "config/dali_align.yaml"
+
+# Run on wynthon
+# module load Sali anaconda/py311-2024.02 mpi/openmpi-x86_64
+
+
 
 # Set up batch index range
 batch_index = list(range(config["batch_range"][0],config["batch_range"][1]))
@@ -8,7 +13,7 @@ batch_index = list(range(config["batch_range"][0],config["batch_range"][1]))
 import glob
 
 # Cluster run template
-#nohup snakemake --snakefile dali_align.smk -j 5 --cluster "qsub -l h_rt={cluster.time} -j y -cwd" --cluster-config config/cluster.yaml --latency-wait 120 --use-singularity &
+# nohup snakemake --snakefile dali_align.smk --configfile config/dali_align_cas12.yaml -j 110 --cluster "qsub -l h_rt={cluster.time} -j y -pe smp 4 -cwd" --cluster-config config/cluster.yaml --rerun-triggers 'mtime' --latency-wait 120 --use-singularity --singularity-args '--bind /scratch --bind /wynton/home/doudna/bellieny-rabelo/nidali_output --bind /wynton/home/doudna/bellieny-rabelo/nidali_db' --rerun-incomplete &
 
 # noinspection SmkAvoidTabWhitespace
 rule all:
@@ -88,15 +93,21 @@ OUTPUT:
 		"""
 	shell:
 		"""
-		cd {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}
+		echo CREATE TEMP RESULT DIRECTORY
+		mkdir -p {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}
+		cd {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}
+		echo CREATE SYMLINKS
+		ln -s {params.query_dir} query_dat || true
+		ln -s {params.dat_database} db_dat || true
+		ln -s {input.target_entries_list} db_entry_list || true
 		dali.pl \
 		--cd1 {wildcards.query_name} \
-		--db {input.target_entries_list} \
-		--dat1 {params.query_dir} \
-		--dat2 {params.dat_database} \
+		--db db_entry_list \
+		--dat1 query_dat \
+		--dat2 db_dat \
 		--oneway \
 		--outfmt "summary,alignments" \
-		--title {output.temp_output_dali} \
-		--clean
-		mv {output.temp_output_dali} {params.output_dali}
+		--title {output.temp_output_dali}
+		cp {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}/{wildcards.query_name}.txt {output.temp_output_dali}
+		cp {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}/{wildcards.query_name}.txt {params.output_dali}
         """
