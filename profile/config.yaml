@@ -7,10 +7,13 @@ printshellcmds: True
 jobname: "{rule}.{jobid}"              # Provide a custom name for the jobscript that is submitted to the cluster.
 jobs: 400                              #Use at most N CPU cluster/cloud jobs in parallel.
 
-#cluster: "sbatch --output=\"jobs/{rule}/slurm_%x_%j.out\" --error=\"jobs/{rule}/slurm_%x_%j.log\" --mem={resources.mem_mb} --time={resources.runtime} --parsable"
+rerun-triggers: 'mtime'
+
+cluster: "qsub -l h_rt={cluster.time} -j y -pe smp 4 -cwd"
+cluster-config: "config/cluster.yaml"
 # singularity
 use-singularity: True
-singularity-args: "--bind /wynton/home/doudna/bellieny-rabelo/nidali_db /scratch/bellieny-rabelo/nidali_output"
+singularity-args: "--bind /usr/lib64/openmpi/ --bind /scratch --bind /wynton/home/doudna/bellieny-rabelo/nidali_output --bind /wynton/home/doudna/bellieny-rabelo/nidali_db"
 # Job resources
 #set-resources:
 #  - helloSingularity:mem_mb=1000

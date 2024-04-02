@@ -99,13 +99,15 @@ OUTPUT:
 		echo CREATE SYMLINKS
 		ln -s {params.query_dir} query_dat || true
 		ln -s {params.dat_database} db_dat || true
-		ln -s {input.target_entries_list} db_entry_list || true
+		ln -s {input.target_entries_list} db_entry_list || true		
+		mpirun -n 3 \
 		dali.pl \
 		--cd1 {wildcards.query_name} \
 		--db db_entry_list \
 		--dat1 query_dat \
 		--dat2 db_dat \
 		--oneway \
+		--np 3 \
 		--outfmt "summary,alignments" \
 		--title {output.temp_output_dali}
 		cp {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}/{wildcards.query_name}.txt {output.temp_output_dali}
