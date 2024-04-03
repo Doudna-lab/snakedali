@@ -40,6 +40,7 @@ git lfs pull
 <details>
 <summary>Snakemake Profile</summary>
 <ul>
+  
   - NIDALI is currently set up to work on `@dev1.wynton.ucsf.edu`
   - Set up the Snakemake profile: `/profile/config.yaml`
   - The default profile includes:
