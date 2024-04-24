@@ -117,3 +117,9 @@ OUTPUT:
 		touch {output.temp_output_dali}
 		cp {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}/{wildcards.query_name}.txt {params.output_dali}/{wildcards.query_name}_batch_{wildcards.batch_index}.txt
         """
+
+rule consolidate_reports:
+	input:
+		expand("{run}/{query_name}_batch_{batch_index}.txt")
+	output:
+		aggregated_report = ""
