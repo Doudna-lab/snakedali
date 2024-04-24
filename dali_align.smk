@@ -21,9 +21,9 @@ rule all:
 		#
 		expand("{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt",
 			db_dir=config["db_dir"],batch_index=batch_index),
-		#
-		expand("{db_dir}/results_{batch_index}",
-			db_dir=config["db_dir"],batch_index=batch_index),
+		# #
+		# expand("{db_dir}/results_{batch_index}",
+		# 	db_dir=config["db_dir"],batch_index=batch_index),
 		#
 		expand("{db_dir}/pdb_files_DAT/batch_{batch_index}/{query_name}.txt",
 			db_dir=config["db_dir"],query_name=config["query_name"], batch_index=batch_index),
@@ -43,38 +43,38 @@ Based on DAT database:
 	script:
 		"py/create_list_file.py"
 
-rule setup_outdir:
-	input:
-		target_entries_list = "{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt",
-	output:
-		directory("{db_dir}/results_{batch_index}"),
-	message:
-		"""
-Anchor on: 
-	--> {input.target_entries_list} 
-Set up output directory: 
-	--> {output}	
-		"""
-	shell:
-		"""
-		mkdir -p {output}
-		"""
+# rule setup_outdir:
+# 	input:
+# 		target_entries_list = "{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt",
+# 	output:
+# 		tracked_outdir = "{db_dir}/results_{batch_index}"
+# 	message:
+# 		"""
+# Anchor on:
+# 	--> {input.target_entries_list}
+# Set up output directory:
+# 	--> {output}
+# 		"""
+# 	shell:
+# 		"""
+# 		touch {output}
+# 		"""
 
 rule dali_run:
 	input:
 		query_dat = "{db_dir}/query_DAT/{query_name}.dat",
-		tracked_outdir="{db_dir}/results_{batch_index}",
-		target_entries_list = "{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt"
+		target_entries_list = "{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt",
 	output:
 		temp_output_dali ="{db_dir}/pdb_files_DAT/batch_{batch_index}/{query_name}.txt"
 	params:
+		dali_path = config['dali_path'],
+		run_time_bechmark = "dali_run_time",
+		target_entries_list = "{db_dir}/pdb_files_DAT/batch_{batch_index}/list_batch_{batch_index}.txt",
 		query_dir="{db_dir}/query_DAT",
 		dat_database = "{db_dir}/pdb_files_DAT/batch_{batch_index}",
 		output_dali = lambda wildcards: glob.glob("{run}".format(
 			run=config["run"]
 		))
-	singularity:
-		"nidali_mpi.sif"
 	threads:
 		config["threads"]
 	message:
@@ -85,31 +85,35 @@ Query path:
 Query ID:
 	--> {wildcards.query_name}
 Target DB:
-	--> {input.target_entries_list}
+	--> {params.target_entries_list}
 DAT database:
 	--> {params.dat_database}
+Threads:
+	--> {threads}
 OUTPUT:
 	--> {params.output_dali}
 		"""
 	shell:
 		"""
+		module load CBI
 		echo CREATE TEMP RESULT DIRECTORY
 		mkdir -p {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}
 		cd {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}
 		echo CREATE SYMLINKS
 		ln -s {params.query_dir} query_dat || true
 		ln -s {params.dat_database} db_dat || true
-		ln -s {input.target_entries_list} db_entry_list || true		
-		mpirun -n 3 \
-		dali.pl \
+		ln -s {params.target_entries_list} db_entry_list || true		
+		start_time=`date +%s`
+		{params.dali_path}/dali.pl \
 		--cd1 {wildcards.query_name} \
 		--db db_entry_list \
 		--dat1 query_dat \
 		--dat2 db_dat \
+		--np {threads} \
 		--oneway \
-		--np 3 \
 		--outfmt "summary,alignments" \
 		--title {output.temp_output_dali}
-		cp {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}/{wildcards.query_name}.txt {output.temp_output_dali}
-		cp {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}/{wildcards.query_name}.txt {params.output_dali}
+		echo $(expr `date +%s` - $start_time) >> {params.run_time_bechmark}_{threads}p.txt
+		touch {output.temp_output_dali}
+		cp {wildcards.db_dir}/pdb_files_DAT/batch_{wildcards.batch_index}/tmp_{wildcards.query_name}/{wildcards.query_name}.txt {params.output_dali}/{wildcards.query_name}_batch_{wildcards.batch_index}.txt
         """
