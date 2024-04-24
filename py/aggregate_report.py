@@ -42,7 +42,6 @@ def parse_summary(line, query_id, query_length):
 
 
 def parse_dali_out(file_path, query_id, query_length):
-	query_id = query_id[:-1]
 	processing_mode = ""
 	alignment_string = ""
 	current_hit = ""
@@ -94,26 +93,60 @@ def third_level_dict_to_df(third_level_dictionary):
 	return df
 
 
+def merge_dictionaries(dict1, dict2):
+	merged_dict = dict1.copy()  # Make a copy of the first dictionary
+	for key, value in dict2.items():
+		if key in merged_dict:
+			if isinstance(value, dict) and isinstance(merged_dict[key], dict):
+				merged_dict[key].update(value)  # Merge inner dictionaries if both values are dictionaries
+			else:
+				merged_dict[key] = [merged_dict[key], value]  # Convert to list if values are not dictionaries
+		else:
+			merged_dict[key] = value
+	return merged_dict
+
+
 def main():
 	# Snakemake I/O
 	# === Inputs
 	query_name = str(snakemake.wildcards.query_name)
-	output_dali = str(snakemake.params.output_dali)
+	output_dali_list = list(snakemake.input)
 	# === Outputs
 	aggregate_report = str(snakemake.output.aggregate_report)
+	# === Params
+	id_converstion_table_path = str(snakemake.params.id_converstion_table)
+	query_length = str(snakemake.params.query_length)
 
 	# DEBUG
-	aln_file_path = "/Users/bellieny/projects/nidali/dump/Y156A_batch_994.txt" # "/wynton/home/doudna/bellieny-rabelo/nidali_output/alshimary/Y156A_batch_994.txt"
-	query = 'Y156A'
-	query_length = 104
+	# output_dali_list = ["/Users/bellieny/projects/nidali/dump/Y156A_batch_342.txt",
+	# 				 "/Users/bellieny/projects/nidali/dump/Y156A_batch_994.txt"] # "/wynton/home/doudna/bellieny-rabelo/nidali_output/alshimary/Y156A_batch_994.txt"
+	# query = 'Y156A'
+	# id_converstion_table_path = "/Users/bellieny/projects/nidali/dump/conversion.txt"
+	# query_length = 104
 
-	# Parse Dali's alignment output to dictionary
-	parsed_dali_dict = parse_dali_out(aln_file_path, query, query_length)
+	merged_dali_parsed_dict = {}
+	query = query_name[:-1]
 
+	for aln_file_path in output_dali_list:
+		# Parse Dali's alignment output to dictionary
+		parsed_dali_dict = parse_dali_out(aln_file_path, query, query_length)
+		print(f"Length of intermediate dict: {len(parsed_dali_dict[query])}")
+		if len(merged_dali_parsed_dict) == 0:
+			merged_dali_parsed_dict = parsed_dali_dict
+			continue
+		merged_dali_parsed_dict = merge_dictionaries(parsed_dali_dict, merged_dali_parsed_dict)
 
+	if id_converstion_table_path:
+		id_converstion_table = pd.read_csv(id_converstion_table_path, sep="\t", low_memory=False, names=['0', '1'])
+		converted_id_dict = dict(zip(id_converstion_table.iloc[:, 0], id_converstion_table.iloc[:, 1]))
+		merged_dali_parsed_dict[query] = {converted_id_dict[key]: value for key, value in merged_dali_parsed_dict[query].items()}
 
 	# Convert the dictionary to a DataFrame with two levels of indices
-	parsed_dali_df = third_level_dict_to_df(parsed_dali_dict)
+	parsed_dali_df = third_level_dict_to_df(merged_dali_parsed_dict)
+	# Add in Alphafold Links
+	parsed_dali_df['Alphafold_link'] = "https://alphafold.ebi.ac.uk/entry/" + parsed_dali_df.index.get_level_values(1)
+	# Export Parsed Dataframe
+	parsed_dali_df.to_excel(aggregate_report)
 
 
 if __name__ == "__main__":

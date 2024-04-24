@@ -2,9 +2,7 @@
 # configfile: "config/dali_align.yaml"
 
 # Run on wynthon
-# module load Sali anaconda/py311-2024.02 mpi/openmpi-x86_64
-
-
+# module load Sali anaconda/py311-2024.02 mpi/openmpi-x86_64 CBI
 
 # Set up batch index range
 batch_index = list(range(config["batch_range"][0],config["batch_range"][1]))
@@ -120,6 +118,6 @@ OUTPUT:
 
 rule consolidate_reports:
 	input:
-		expand("{run}/{query_name}_batch_{batch_index}.txt")
+		expand("{run}/{query_name}_batch_{batch_index}.txt", run='',query_name='',batch_index='')
 	output:
 		aggregated_report = ""
