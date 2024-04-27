@@ -13,7 +13,7 @@ cluster: "qsub -l h_rt={cluster.time} -j y -pe smp 10 -cwd"
 cluster-config: "config/cluster.yaml"
 # singularity
 use-singularity: True
-singularity-args: "--bind /usr/lib64/openmpi/ --bind /scratch/ --bind /wynton/home/doudna/bellieny-rabelo/nidali_output --bind /wynton/home/doudna/bellieny-rabelo/nidali_db"
+singularity-args: "--bind /usr/lib64/openmpi/ --bind /scratch/ --bind /wynton/home/doudna/bellieny-rabelo/"
 # Job resources
 #set-resources:
 #  - helloSingularity:mem_mb=1000

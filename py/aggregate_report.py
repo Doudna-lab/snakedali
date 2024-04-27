@@ -48,7 +48,6 @@ def parse_dali_out(file_path, query_id, query_length):
 	summary_dict = {}
 
 	with open(file_path) as infile:
-
 		for line in infile:
 			if line == "":
 				continue
@@ -73,9 +72,12 @@ def parse_dali_out(file_path, query_id, query_length):
 					hit_aligned = match.group(2)[:-1]
 					if current_hit != hit_aligned:
 						if not int(entry_number) == int(1):
-							summary_dict[query_id][current_hit].setdefault('Full_Alignment', alignment_string)
-							alignment_string = ""
-							current_hit = hit_aligned
+							try:
+								summary_dict[query_id][current_hit].setdefault('Full_Alignment', alignment_string)
+								alignment_string = ""
+								current_hit = hit_aligned
+							except KeyError:
+								continue
 						if int(entry_number) == int(1):
 							current_hit = hit_aligned
 							continue
@@ -117,20 +119,32 @@ def main():
 	id_converstion_table_path = str(snakemake.params.id_converstion_table)
 	query_length = str(snakemake.params.query_length)
 
+
+
 	# DEBUG
-	# output_dali_list = ["/Users/bellieny/projects/nidali/dump/Y156A_batch_342.txt",
-	# 				 "/Users/bellieny/projects/nidali/dump/Y156A_batch_994.txt"] # "/wynton/home/doudna/bellieny-rabelo/nidali_output/alshimary/Y156A_batch_994.txt"
-	# query = 'Y156A'
-	# id_converstion_table_path = "/Users/bellieny/projects/nidali/dump/conversion.txt"
-	# query_length = 104
+	output_dali_list = ["/Users/bellieny/projects/nidali/dump/Y156A_batch_342.txt",
+					 "/Users/bellieny/projects/nidali/dump/Y156A_batch_994.txt"] # "/wynton/home/doudna/bellieny-rabelo/nidali_output/alshimary/Y156A_batch_994.txt"
+	query_name = '0156A'
+	aggregate_report = "0156_daliout.xlsx"
+	id_converstion_table_path = "/Users/bellieny/projects/nidali/dump/clustered_AFDB_structure_key.txt"
+	query_length = 849
+	# 849 0
+	# 129 X Domain1
+	# 108 Y Domain2
 
 	merged_dali_parsed_dict = {}
 	query = query_name[:-1]
 
+	batch_range = [1, 2302]
+	batch_index = list(range(batch_range[0], batch_range[1]))
+
+	root_output = "/Users/bellieny/projects/nidali/dump/alshimary_m/results"
+	output_dali_list = [f"{root_output}/{query_name}_batch_{batch}.txt" for batch in batch_index]
+
 	for aln_file_path in output_dali_list:
 		# Parse Dali's alignment output to dictionary
 		parsed_dali_dict = parse_dali_out(aln_file_path, query, query_length)
-		print(f"Length of intermediate dict: {len(parsed_dali_dict[query])}")
+		# print(f"Length of intermediate dict: {len(parsed_dali_dict[query])}")
 		if len(merged_dali_parsed_dict) == 0:
 			merged_dali_parsed_dict = parsed_dali_dict
 			continue
@@ -138,7 +152,7 @@ def main():
 
 	if id_converstion_table_path:
 		id_converstion_table = pd.read_csv(id_converstion_table_path, sep="\t", low_memory=False, names=['0', '1'])
-		converted_id_dict = dict(zip(id_converstion_table.iloc[:, 0], id_converstion_table.iloc[:, 1]))
+		converted_id_dict = dict(zip(id_converstion_table.iloc[:, 1], id_converstion_table.iloc[:, 0]))
 		merged_dali_parsed_dict[query] = {converted_id_dict[key]: value for key, value in merged_dali_parsed_dict[query].items()}
 
 	# Convert the dictionary to a DataFrame with two levels of indices

@@ -3,6 +3,10 @@ __default__:
   time: '1:00:00'
   cores: 1
 
+create_list_input:
+  time: '00:05:00'
+  cores: 1
+
 dali_run:
-  time: '20:00'
+  time: '00:20:00'
   cores: 10
