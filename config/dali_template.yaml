@@ -8,13 +8,18 @@ db_dir: "/wynton/home/doudna/bellieny-rabelo/nidali_db/toy_db"
 # "/wynton/home/doudna/bellieny-rabelo/nidali_db"
 input_dir: "/wynton/home/doudna/bellieny-rabelo/nidali_bmarking/query_DAT"
 
+tmpdir: '$TMPDIR'
+
 #
 dali_path: "/wynton/home/doudna/bellieny-rabelo/projects/dali_install/DaliLite.v5/bin"
 
-threads: 10
+threads: 15
 
 # Filename prefix for individual lists of entry IDs
 dat_id_list_prefix: "list_batch_"
+
+# Alphafold ID conversion table
+id_convert: "/wynton/home/doudna/bellieny-rabelo/projects/nidali/dump/clustered_AFDB_structure_key.txt"
 
 # === Run-associated variables
 # Range of batches within the database to be processed

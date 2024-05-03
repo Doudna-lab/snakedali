@@ -114,20 +114,18 @@ def main():
 	query_name = str(snakemake.wildcards.query_name)
 	output_dali_list = list(snakemake.input)
 	# === Outputs
-	aggregate_report = str(snakemake.output.aggregate_report)
+	aggregated_report = str(snakemake.output.aggregated_report)
 	# === Params
 	id_converstion_table_path = str(snakemake.params.id_converstion_table)
-	query_length = str(snakemake.params.query_length)
-
-
+	# query_length = str(snakemake.params.query_length)
 
 	# DEBUG
-	output_dali_list = ["/Users/bellieny/projects/nidali/dump/Y156A_batch_342.txt",
-					 "/Users/bellieny/projects/nidali/dump/Y156A_batch_994.txt"] # "/wynton/home/doudna/bellieny-rabelo/nidali_output/alshimary/Y156A_batch_994.txt"
-	query_name = '0156A'
-	aggregate_report = "0156_daliout.xlsx"
-	id_converstion_table_path = "/Users/bellieny/projects/nidali/dump/clustered_AFDB_structure_key.txt"
-	query_length = 849
+	# output_dali_list = ["/Users/bellieny/projects/nidali/dump/Y156A_batch_342.txt",
+	# 				 "/Users/bellieny/projects/nidali/dump/Y156A_batch_994.txt"] # "/wynton/home/doudna/bellieny-rabelo/nidali_output/alshimary/Y156A_batch_994.txt"
+	# query_name = '0156A'
+	# aggregated_report = "0156_daliout.xlsx"
+	# id_converstion_table_path = "/Users/bellieny/projects/nidali/dump/clustered_AFDB_structure_key.txt"
+	query_length = 1000
 	# 849 0
 	# 129 X Domain1
 	# 108 Y Domain2
@@ -138,8 +136,8 @@ def main():
 	batch_range = [1, 2302]
 	batch_index = list(range(batch_range[0], batch_range[1]))
 
-	root_output = "/Users/bellieny/projects/nidali/dump/alshimary_m/results"
-	output_dali_list = [f"{root_output}/{query_name}_batch_{batch}.txt" for batch in batch_index]
+	# root_output = "/Users/bellieny/projects/nidali/dump/alshimary_m/results"
+	# output_dali_list = [f"{root_output}/{query_name}_batch_{batch}.txt" for batch in batch_index]
 
 	for aln_file_path in output_dali_list:
 		# Parse Dali's alignment output to dictionary
@@ -160,7 +158,7 @@ def main():
 	# Add in Alphafold Links
 	parsed_dali_df['Alphafold_link'] = "https://alphafold.ebi.ac.uk/entry/" + parsed_dali_df.index.get_level_values(1)
 	# Export Parsed Dataframe
-	parsed_dali_df.to_excel(aggregate_report)
+	parsed_dali_df.to_excel(aggregated_report)
 
 
 if __name__ == "__main__":

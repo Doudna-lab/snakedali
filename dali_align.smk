@@ -52,6 +52,7 @@ rule dali_run:
 	output:
 		output_dali ="{run}/alignments/{query_name}/batches/batch_{batch_index}/{query_name}.txt"
 	params:
+		tmpdir = config['tmpdir'],
 		dali_path = config['dali_path'],
 		run_time_bechmark = "dali_run_time",
 		input_dir = config["input_dir"],
@@ -70,14 +71,22 @@ DAT database:
 	--> {params.dat_database}
 Threads:
 	--> {threads}
+TMPDIR:
+	--> {params.tmpdir}
 OUTPUT:
 	--> {output.output_dali}
 		"""
 	shell:
 		"""
-		module load CBI
-		echo CREATE TEMP RESULT DIRECTORY
-		cd {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/
+		echo LOAD MODULE
+		module load CBI		
+		
+		echo CREATE SCRATCH FOLDER
+		echo {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/
+		mkdir -p {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/
+		mkdir -p {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/
+		cd {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/
+		
 		echo CREATE SYMLINKS
 		ln -s {params.input_dir} query_dat || true
 		ln -s {params.dat_database} db_dat || true
@@ -92,7 +101,11 @@ OUTPUT:
 		--clean \
 		--oneway \
 		--outfmt "summary,alignments"
+		
 		echo $(expr `date +%s` - $start_time) >> {params.run_time_bechmark}_{threads}p.txt
+		
+		echo MOVE RESULTS TO PERMANENT PATH
+		mv {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt
 		"""
 
 rule consolidate_reports:
@@ -101,6 +114,8 @@ rule consolidate_reports:
 			run=config["run"],batch_index=batch_index)
 	output:
 		aggregated_report = "{run}/results/{query_name}/{query_name}_daliout.xlsx"
+	params:
+		id_converstion_table = config["id_convert"]
 	message:
 		"""
 Aggregate dali outputs for query {wildcards.query_name}: 

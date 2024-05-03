@@ -9,14 +9,14 @@ db_dir: "/wynton/home/doudna/bellieny-rabelo/nidali_db"
 
 dali_path: "/wynton/home/doudna/bellieny-rabelo/projects/dali_install/DaliLite.v5/bin"
 
-threads: 10
+threads: 15
 
 # Filename prefix for individual lists of entry IDs
 dat_id_list_prefix: "list_batch_"
 
 # === Run-associated variables
 # Range of batches within the database to be processed
-batch_range: [1,2302]
+batch_range: [0,2303]
 
-query_name: ["X156A", "Y156A", "0156A"]
+query_name: ["X156A"]#, "Y156A", "0156A"]
 
