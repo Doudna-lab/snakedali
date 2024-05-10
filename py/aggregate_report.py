@@ -151,14 +151,27 @@ def main():
 	if id_converstion_table_path:
 		id_converstion_table = pd.read_csv(id_converstion_table_path, sep="\t", low_memory=False, names=['0', '1'])
 		converted_id_dict = dict(zip(id_converstion_table.iloc[:, 1], id_converstion_table.iloc[:, 0]))
-		merged_dali_parsed_dict[query] = {converted_id_dict[key]: value for key, value in merged_dali_parsed_dict[query].items()}
+		final_converted_id_dict = {}
+		try:
+			data_valid = True
+			data_check = merged_dali_parsed_dict[query]
+		except KeyError:
+			data_valid = False
+			pd.DataFrame().to_excel(aggregated_report)
+		if data_valid:
+			for key, value in merged_dali_parsed_dict[query].items():
+				try:
+					final_converted_id_dict.setdefault(query, {}).setdefault(converted_id_dict[key], value)
+				except KeyError:
+					continue
 
-	# Convert the dictionary to a DataFrame with two levels of indices
-	parsed_dali_df = third_level_dict_to_df(merged_dali_parsed_dict)
-	# Add in Alphafold Links
-	parsed_dali_df['Alphafold_link'] = "https://alphafold.ebi.ac.uk/entry/" + parsed_dali_df.index.get_level_values(1)
-	# Export Parsed Dataframe
-	parsed_dali_df.to_excel(aggregated_report)
+			# merged_dali_parsed_dict[query] = {converted_id_dict[key]: value for key, value in merged_dali_parsed_dict[query].items()}
+			# Convert the dictionary to a DataFrame with two levels of indices
+			parsed_dali_df = third_level_dict_to_df(final_converted_id_dict)
+			# Add in Alphafold Links
+			parsed_dali_df['Alphafold_link'] = "https://alphafold.ebi.ac.uk/entry/" + parsed_dali_df.index.get_level_values(1)
+			# Export Parsed Dataframe
+			parsed_dali_df.to_excel(aggregated_report)
 
 
 if __name__ == "__main__":

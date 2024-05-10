@@ -10,7 +10,7 @@ def main():
 	# === Inputs
 	source_dat_path = str(snakemake.input.dat_database)
 	# === Outputs
-	dat_list_file = str(snakemake.output.dat_list_file)
+	dat_list_file = str(snakemake.output.target_entries_list)
 
 	names_list = []
 

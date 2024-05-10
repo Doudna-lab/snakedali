@@ -1,5 +1,6 @@
 latency-wait: 120
 reason: True
+rerun-incomplete: True
 show-failed-logs: True
 keep-going: True
 printshellcmds: True
