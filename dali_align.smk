@@ -1,13 +1,12 @@
+# **** Imports ****
+import glob
+
 # **** Variables ****
-
-# Run on UCSF's Wynthon HPC
-# module load Sali anaconda/py311-2024.02 mpi/openmpi-x86_64 CBI
-
 # Set up batch index range
 batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 
-# **** Imports ****
-import glob
+# Prep run on UCSF's Wynthon HPC
+# module load Sali anaconda/py311-2024.02 mpi/openmpi-x86_64 CBI
 
 # Cluster run template
 # nohup snakemake --snakefile dali_align.smk --configfile config/dali_template.yaml --profile profile/ &
@@ -15,16 +14,17 @@ import glob
 # noinspection SmkAvoidTabWhitespace
 rule all:
 	input:
-		#
+		# Creates a text list containing all database entry IDs in preparation for dalilite
 		expand("{run}/dali_run_elements/batches/batch_{batch_index}/list_batch_{batch_index}.txt",
 			run=config["run"],batch_index=batch_index),
-		#
+		# Runs the structural alignment and allocate the final outputs according to the config file variables
 		expand("{run}/alignments/{query_name}/batches/batch_{batch_index}/{query_name}.txt",
 			run=config["run"],query_name=config["query_name"], batch_index=batch_index),
-		#
+		# Aggregate structural alignment results in a single xlsx spreadsheet
 		expand("{run}/results/{query_name}/{query_name}_daliout.xlsx",
 			run=config["run"],query_name=config["query_name"])
 
+# noinspection SmkAvoidTabWhitespace
 rule create_list_input:
 	input:
 		dat_database = lambda wildcards: glob.glob("{db_dir}/pdb_files_DAT/batch_{batch_index}".format(
@@ -42,6 +42,7 @@ Based on DAT database:
 	script:
 		"py/create_list_file.py"
 
+# noinspection SmkAvoidTabWhitespace
 rule dali_run:
 	input:
 		query_dat = lambda wildcards: glob.glob("{input_dir}/{query_name}.dat".format(
@@ -108,6 +109,7 @@ OUTPUT:
 		mv {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt
 		"""
 
+# noinspection SmkAvoidTabWhitespace
 rule consolidate_reports:
 	input:
 		expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}.txt",
