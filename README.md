@@ -3,7 +3,7 @@
 ## OVERVIEW
 
 <details>
-<summary>1- What is Snakedali?</summary>
+<summary>1 What is Snakedali?</summary>
 
 Snakedali is the Snakemake implementation of the multithreaded version of DaliLite v5 to align PDB queries to a pre-built Alphafold database. 
 It introduces automated input handling and a unified report that aggregates all queries and hits in a single .xlsx.
@@ -12,7 +12,7 @@ It introduces automated input handling and a unified report that aggregates all 
 </details>
 
 <details>
-<summary>2- Citation</summary>
+<summary>2 Citation</summary>
 <ul>
 
 'Structure Guided Discovery of Ancestral CRISPR-Cas13 Ribonucleases '
@@ -23,7 +23,7 @@ It introduces automated input handling and a unified report that aggregates all 
 ## GETTING STARTED
 
 <details>
-<summary>3. Dependencies</summary>
+<summary>3 Dependencies</summary>
 <ul>
 
 <details>
@@ -140,7 +140,7 @@ git lfs pull
 
 
 <details>
-<summary>5. Snakedali Pipeline Setup</summary>
+<summary>5 Snakedali Pipeline Setup</summary>
 <ul>
 
 <details>
