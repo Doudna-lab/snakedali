@@ -1,19 +1,111 @@
 ![screenshot](figures/logos/snakedali_logo.png)
 
-## CLONING THIS REPOSITORY
+## OVERVIEW
 
 <details>
-<summary>1- Standard Git</summary>
-<ul>
+<summary>1- What is Snakedali?</summary>
 
-  Clone repository files
-```
-git clone https://github.com/Doudna-lab/nidali.git
-```
+Snakedali is the Snakemake implementation of DaliLite v5 to align PDB queries to a pre-built Alphafold database.
+
+
 </details>
 
 <details>
-<summary>2- Git LFS</summary>
+<summary>2- Citation</summary>
+<ul>
+
+'Structure Guided Discovery of Ancestral CRISPR-Cas13 Ribonucleases '
+
+</ul>
+</details>
+
+## GETTING STARTED
+
+<details>
+<summary>3. Dependencies</summary>
+<ul>
+
+<details>
+<summary>3.1 Anaconda </summary>
+<ul>
+
+ - Install Miniconda:
+ - Download the installer at: https://docs.conda.io/projects/miniconda/en/latest/
+ 
+   ```
+   bash Miniconda3-latest-<your-OS>.sh
+   ```
+  - Set up and update conda: 
+    ```
+    conda update --all
+    conda config --set channel_priority strict
+    ```
+</ul>
+</details>
+
+<details>
+<summary>3.2 Snakemake </summary>
+<ul>
+
+- Snakemake can be installed directly via Anaconda:
+
+  ```
+  conda install -n base -c conda-forge mamba
+  ```
+</ul>
+</details>
+
+<details>
+<summary>3.3 DaliLite v5 </summary>
+<ul>
+
+- Snakedali requires a valid installation of DaliLite v5
+- Snakedali defaults to the parallelized implementation of DaliLite
+
+```
+wget http://ekhidna2.biocenter.helsinki.fi/dali/DaliLite.v5.tar.gz
+tar -zxvf DaliLite.v5.tar.gz
+cd /home/you/DaliLite.v5/bin
+make clean
+make parallel
+```
+ - Future updates are planned to include a non-parallel version of Snakedali
+ - More details on how to acquire the program can be found on the software's page:
+   - http://ekhidna2.biocenter.helsinki.fi/dali/README.v5.html#install
+
+</ul>
+</details>
+
+</ul>
+</details>
+
+<details>
+<summary>4 Installation</summary>
+<ul>
+
+<details>
+<summary>4.1 Database Download</summary>
+<ul>
+
+  - Download the pre-built database through __
+
+
+</ul>
+</details>
+
+<details>
+<summary>4.2 Standard Git</summary>
+<ul>
+
+  - Clone repository files
+```
+git clone https://github.com/Doudna-lab/nidali.git
+```
+</ul>
+</details>
+
+<details>
+<summary>4.3 Git LFS</summary>
 <ul>
   
   - A singularity/apptainer container is provided in this repository
@@ -38,7 +130,12 @@ git lfs install
 ```
 git lfs pull
 ```
+</ul>
 </details>
+
+</ul>
+</details>
+
 
 ## Snakedali PIPELINE STRUCTURE
 
@@ -58,4 +155,5 @@ git lfs pull
   - Make sure to adjust the parameters above according to the house rules of your HPC.
   - If using the containers, make sure to uncomment the #singularity-args line on `profile/config.yaml`
 
+</ul>
 </details>

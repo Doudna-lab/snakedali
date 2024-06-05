@@ -1,28 +1,33 @@
 # === Directory- and File Paths
 # Path to parent directory where query and database are stored
-run: "/wynton/home/doudna/bellieny-rabelo/nidali_bmarking/daliout"
-# "/scratch/bellieny-rabelo/nidali_output"
-# "/groups/doudna/projects/daniel_projects/yoon_ph/nidali_smk_output"
-db_dir: "/wynton/home/doudna/bellieny-rabelo/nidali_db/toy_db"
-#  "/groups/doudna/projects/daniel_projects/yoon_ph"
-# "/wynton/home/doudna/bellieny-rabelo/nidali_db"
-input_dir: "/wynton/home/doudna/bellieny-rabelo/nidali_bmarking/query_DAT"
+run: ""
 
+# The pipeline assumes the subdir called <pdb_files_DAT> is under this path
+#   The <pdb_files_DAT> is a pre-built file that must be downloaded prior to Snakedali execution
+db_dir: ""
+
+# The pipeline assumes this is where *.dat files are stored
+input_dir: ""
+
+# Commonly a temporary directory where intermediate files are generated and purged
+#   Set up this environment variable prior to Snakedali execution
 tmpdir: '$TMPDIR'
 
-#
-dali_path: "/wynton/home/doudna/bellieny-rabelo/projects/dali_install/DaliLite.v5/bin"
+# Path to Dali's binary folder
+dali_path: "DaliLite.v5/bin"
 
-threads: 15
+# According to the 'cluster' variable in: profile/config.yaml
+threads: 10
 
-# Filename prefix for individual lists of entry IDs
+# Do not change: Filename prefix for individual lists of entry IDs
 dat_id_list_prefix: "list_batch_"
 
 # Alphafold ID conversion table
-id_convert: "/wynton/home/doudna/bellieny-rabelo/projects/nidali/dump/clustered_AFDB_structure_key.txt"
+id_convert: "dump/clustered_AFDB_structure_key.txt"
 
 # === Run-associated variables
-# Range of batches within the database to be processed
-batch_range: [2300,2301]
+# Do not change: Range of batches within the database to be processed
+batch_range: [0,2302]
 
-query_name: ["X156A", "Y156A"]
+# PDB entry names without file extensions
+query_name: [""] # e.g.: ["5id6A", "4dynA", "4an8A"]

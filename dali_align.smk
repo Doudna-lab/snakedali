@@ -11,7 +11,7 @@ batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 import glob
 
 # Cluster run template
-# nohup snakemake --snakefile dali_align_bmarking.smk --configfile config/dali_template.yaml --profile profile/ &
+# nohup snakemake --snakefile dali_align.smk --configfile config/dali_template.yaml --profile profile/ &
 
 # noinspection SmkAvoidTabWhitespace
 rule all:
@@ -103,6 +103,7 @@ OUTPUT:
 		--outfmt "summary,alignments"
 		
 		echo $(expr `date +%s` - $start_time) >> {params.run_time_bechmark}_{threads}p.txt
+		mv {params.run_time_bechmark}_{threads}p.txt {wildcards.run}/alignments/{params.run_time_bechmark}_{threads}p_{wildcards.query_name}.txt
 		
 		echo MOVE RESULTS TO PERMANENT PATH
 		mv {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt
