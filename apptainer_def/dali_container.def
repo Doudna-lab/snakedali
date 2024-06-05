@@ -1,0 +1,78 @@
+Bootstrap: docker
+From: centos:8
+Stage: build
+
+%files
+    DaliLite.v5/ /opt
+
+%environment
+    PATH="/opt/DaliLite.v5/bin:${PATH}"
+    export OPENMPI_PATH=/usr/lib64/openmpi/bin/
+    export LC_ALL=C
+    # Point to OMPI binaries, libraries, man pages
+    export OMPI_DIR=/usr/lib64/openmpi
+    export PATH="$OMPI_DIR/bin:$PATH"
+    export LD_LIBRARY_PATH="$OMPI_DIR/lib:$LD_LIBRARY_PATH"
+    export MANPATH="$OMPI_DIR/share/man:$MANPATH"
+
+%post
+    cd /etc/yum.repos.d/
+    sed -i -e "s|mirrorlist=|#mirrorlist=|g" /etc/yum.repos.d/CentOS-*
+    sed -i -e "s|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" /etc/yum.repos.d/CentOS-*
+
+    yum install -y make gcc \
+    gcc-gfortran \
+    gcc-c++ \
+    pmix \
+    git \
+    bzip2 \
+    wget \
+    bash \
+    openmpi \
+    perl \
+    tcsh
+
+    echo "Installing Open MPI"
+    export OMPI_DIR=/usr/lib64/openmpi
+    export PMIX_DIR=/usr/lib64/pmix/
+    export OMPI_VERSION=4.1.1
+    export OMPI_URL="https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-$OMPI_VERSION.tar.bz2"
+    #export PMIX_URL="https://rpmfind.net/linux/centos-stream/9-stream/AppStream/x86_64/os/Packages/pmix-3.2.3-3.el9.x86_64.rpm"
+    #export LIBEVENT_URL="https://rpmfind.net/linux/centos-stream/9-stream/BaseOS/x86_64/os/Packages/libevent-2.1.12-6.el9.x86_64.rpm"
+    #export LIBEVENT_PT_URL="https://rpmfind.net/linux/centos-stream/9-stream/BaseOS/x86_64/os/Packages/libevent-2.1.12-6.el9.i686.rpm"
+    #export GLIBC2="https://rpmfind.net/linux/centos-stream/9-stream/BaseOS/x86_64/os/Packages/glibc-2.34-95.el9.i686.rpm"
+    #export OSSL="https://rpmfind.net/linux/centos-stream/9-stream/BaseOS/x86_64/os/Packages/openssl-libs-3.0.7-20.el9.i686.rpm"
+    #export GLIBCOM="https://rpmfind.net/linux/centos-stream/9-stream/BaseOS/x86_64/os/Packages/glibc-common-2.34-95.el9.x86_64.rpm"
+    #export GLIBLB="https://rpmfind.net/linux/centos-stream/9-stream/BaseOS/x86_64/os/Packages/glibc-all-langpacks-2.34-95.el9.x86_64.rpm"
+    mkdir -p /tmp/ompi
+    #mkdir -p /tmp/pmix
+    mkdir -p /opt
+    # Download PMIX
+    #cd /tmp/pmix && wget -O pmix-3.2.3.rpm $PMIX_URL
+    #cd /tmp/pmix && wget -O libevent-2.1.12.rpm $LIBEVENT_URL
+    #cd /tmp/pmix && wget -O libevent_pt-2.1.12.rpm $LIBEVENT_PT_URL
+    #cd /tmp/pmix && wget -O glibc2.rpm $GLIBC2
+    #cd /tmp/pmix && wget -O ossl-3.0.7.rpm $OSSL
+    #cd /tmp/pmix && wget -O glibc-common-2.34-95.rpm $GLIBCOM
+    #cd /tmp/pmix && wget -O glibc-all-langpacks-2.34-95.rpm $GLIBLB
+    # Compile and install PMIX
+    #cd /tmp/pmix && yum --disablerepo=* localinstall *.rpm
+    #cd /tmp/pmix && yum localinstall glibc2.rpm
+    #cd /tmp/pmix && yum localinstall glibc-common-2.34-95.rpm
+    #cd /tmp/pmix && yum localinstall glibc-all-langpacks-2.34-95.rpm
+    #cd /tmp/pmix && yum localinstall ossl-3.0.7.rpm
+    #cd /tmp/pmix && yum localinstall libevent-2.1.12.rpm
+    #cd /tmp/pmix && yum localinstall libevent_pt-2.1.12.rpm
+    #cd /tmp/pmix && yum localinstall pmix-3.2.3.rpm
+    
+    # Download OMPI
+    cd /tmp/ompi && wget -O openmpi-$OMPI_VERSION.tar.bz2 $OMPI_URL && tar -xjf openmpi-$OMPI_VERSION.tar.bz2
+    # Compile and install OMPI
+    cd /tmp/ompi/openmpi-$OMPI_VERSION && ./configure --prefix=$OMPI_DIR && make -j8 install
+
+    yum clean all
+
+    cd /opt/DaliLite.v5/bin
+    chmod 755 -R /opt/DaliLite.v5/
+    make clean
+    make parallel
