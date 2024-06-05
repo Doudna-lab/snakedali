@@ -1,6 +1,0 @@
-# Job: test
-# Query: mol1A
-# No:  Chain   Z    rmsd lali nres  %id PDB  Description
-
-# Pairwise alignments
-

@@ -1,9 +1,0 @@
-# Job: walk
-# Query: 5cnbA
-# No:  Chain   Z    rmsd lali nres  %id PDB  Description
-   1:  5cnb-A 31.6  0.0  152   152  100   MOLECULE: MYOGLOBIN;                                                 
-   2:  101m-A 26.8  0.9  152   154   86   MOLECULE: MYOGLOBIN;                                                 
-   3:  2nrm-A 22.3  1.5  145   146   44   MOLECULE: MYOGLOBIN;                                                 
-   4:  1bin-A 13.7  2.5  133   143   13   MOLECULE: LEGHEMOGLOBIN A;                                           
-   5:  1all-A  5.7  3.7  106   160   12   MOLECULE: ALLOPHYCOCYANIN;                                           
-
