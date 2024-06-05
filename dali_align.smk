@@ -1,7 +1,6 @@
 # **** Variables ****
-# configfile: "config/dali_align.yaml"
 
-# Run on wynthon
+# Run on UCSF's Wynthon HPC
 # module load Sali anaconda/py311-2024.02 mpi/openmpi-x86_64 CBI
 
 # Set up batch index range

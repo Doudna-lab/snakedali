@@ -10,7 +10,7 @@ jobs: 600                              #Use at most N CPU cluster/cloud jobs in 
 
 rerun-triggers: 'mtime'
 
-cluster: "qsub -l h_rt={cluster.time} -j y -pe smp 15 -cwd"
+cluster: "qsub -l h_rt={cluster.time} -j y -pe smp 10 -cwd"
 cluster-config: "config/cluster.yaml"
 # singularity
 use-singularity: True
