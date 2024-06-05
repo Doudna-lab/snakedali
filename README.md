@@ -5,7 +5,8 @@
 <details>
 <summary>1- What is Snakedali?</summary>
 
-Snakedali is the Snakemake implementation of DaliLite v5 to align PDB queries to a pre-built Alphafold database.
+Snakedali is the Snakemake implementation of the multithreaded version of DaliLite v5 to align PDB queries to a pre-built Alphafold database. 
+It introduces automated input handling and a unified report that aggregates all queries and hits in a single .xlsx.
 
 
 </details>
@@ -108,7 +109,8 @@ git clone https://github.com/Doudna-lab/nidali.git
 <summary>4.3 Git LFS</summary>
 <ul>
   
-  - A singularity/apptainer container is provided in this repository
+  - Two singularity/apptainer containers are provided in this repository
+  - Although these are support files which are <b><u>not</u></b> integrated to the pipeline, they could be useful for users who may be facing issues when trying to get DaliLite installed in unsupported machines.
   - These large files will be indexed upon cloning and will take a small amount of storage. 
   - The user can then download them with Git LFS in case they need the containerized version.
   
@@ -137,23 +139,65 @@ git lfs pull
 </details>
 
 
-## Snakedali PIPELINE STRUCTURE
+<details>
+<summary>5. Snakedali Pipeline Setup</summary>
+<ul>
 
 <details>
-<summary>Snakemake Profile</summary>
+<summary>5.1 Profile Configuration</summary>
+<ul>
+
+ - Each Snakedali run can be customized based on the `configuration file`: `config/dali_template.yaml`
+ - This file can be replicated, and each subsequent modified yaml file is associated with one Snakedali run.
+ - From the configuration file users are expected to set up:
+   - In-/Output paths for the run
+   - pre-built database path
+   - query name(s)
+   - default DaliLite v5 binary folder path
+
+</ul>
+</details>
+
+<details>
+<summary>5.2 Snakemake Profile</summary>
 <ul>
   
   - Snakedali was designed to work with `(Sun Grid Engine) SGE` job scheduler
-  - Set up the Snakemake profile: `/profile/config.yaml`
+  - The Snakemake profile can be modified to accommodate other schedulers: `/profile/config.yaml`
   
   - The default profile includes:
     - cluster job submission: `qsub -l h_rt={cluster.time} -j y -pe smp 4 -cwd`
     - cluster config path: `config/cluster.yaml`
     - rerun triggers: `mtime`
     - n jobs limit: `600`
+    - latency-wait: `120` 
+    - reason: `True`
+    - rerun-incomplete: `True`
+    - show-failed-logs: `True`
+    - keep-going: `True`
+    - printshellcmds: `True`
+    - jobname: `{rule}.{jobid}`
+    - jobs: `600`       
    
   - Make sure to adjust the parameters above according to the house rules of your HPC.
-  - If using the containers, make sure to uncomment the #singularity-args line on `profile/config.yaml`
+
+</ul>
+</details>
+
+</ul>
+</details>
+
+
+
+<details>
+<summary>6 Run Snakedali</summary>
+<ul>
+
+ - Once the necessary inputs have been set up in the `configuration file`, Snakedali shall be called as in:
+
+```
+snakemake --snakefile dali_align.smk --configfile config/dali_template.yaml --profile profile/
+```
 
 </ul>
 </details>
