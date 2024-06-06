@@ -112,8 +112,11 @@ OUTPUT:
 # noinspection SmkAvoidTabWhitespace
 rule consolidate_reports:
 	input:
-		expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}.txt",
-			run=config["run"],batch_index=batch_index)
+		alignment_list = expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}.txt",
+			run=config["run"],batch_index=batch_index),
+		query_dat = lambda wildcards: glob.glob("{input_dir}/{{query_name}}.dat".format(
+			input_dir=config["input_dir"]
+		))
 	output:
 		aggregated_report = "{run}/results/{query_name}/{query_name}_daliout.xlsx"
 	params:

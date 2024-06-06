@@ -23,7 +23,7 @@ threads: 10
 dat_id_list_prefix: "list_batch_"
 
 # Alphafold ID conversion table
-id_convert: "dump/clustered_AFDB_structure_key.txt"
+id_convert: "support_data/clustered_AFDB_structure_key.txt"
 
 # === Run-associated variables
 # Do not change: Range of batches within the database to be processed
