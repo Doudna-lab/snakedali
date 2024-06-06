@@ -1,5 +1,12 @@
 ![screenshot](figures/logos/snakedali_logo.png)
 
+![GitHub Tag](https://img.shields.io/github/v/tag/Doudna-lab/snakedali)
+![GitHub top language](https://img.shields.io/github/languages/top/Doudna-lab/snakedali)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Doudna-lab/snakedali)
+![GitHub repo size](https://img.shields.io/github/repo-size/Doudna-lab/snakedali)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Doudna-lab/snakedali/total)
+
+
 ## OVERVIEW
 
 <details>
