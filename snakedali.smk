@@ -9,7 +9,7 @@ batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 # module load Sali anaconda/py311-2024.02 mpi/openmpi-x86_64 CBI
 
 # Cluster run template
-# nohup snakemake --snakefile dali_align.smk --configfile config/dali_template.yaml --profile profile/ &
+# nohup snakemake --snakefile snakedali.smk --configfile config/dali_template.yaml --profile profile/ &
 
 # noinspection SmkAvoidTabWhitespace
 rule all:

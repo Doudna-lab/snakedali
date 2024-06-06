@@ -144,7 +144,7 @@ git lfs pull
 <ul>
 
 <details>
-<summary>5.1 Profile Configuration</summary>
+<summary>5.1 Run Configuration</summary>
 <ul>
 
  - Each Snakedali run can be customized based on the `configuration file`: `config/dali_template.yaml`
@@ -196,7 +196,7 @@ git lfs pull
  - Once the necessary inputs have been set up in the `configuration file`, Snakedali shall be called as in:
 
 ```
-snakemake --snakefile dali_align.smk --configfile config/dali_template.yaml --profile profile/
+snakemake --snakefile snakedali.smk --configfile config/dali_template.yaml --profile profile/
 ```
 
 </ul>
