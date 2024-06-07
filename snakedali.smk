@@ -103,7 +103,7 @@ OUTPUT:
 		--outfmt "summary,alignments"
 		
 		echo $(expr `date +%s` - $start_time) >> {params.run_time_bechmark}_{threads}p.txt
-		mv {params.run_time_bechmark}_{threads}p.txt {wildcards.run}/alignments/{params.run_time_bechmark}_{threads}p_{wildcards.query_name}.txt
+		mv {params.run_time_bechmark}_{threads}p.txt {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{params.run_time_bechmark}_{threads}p_{wildcards.query_name}.txt
 		
 		echo MOVE RESULTS TO PERMANENT PATH
 		mv {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt
