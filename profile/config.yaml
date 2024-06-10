@@ -14,12 +14,10 @@ cluster: "qsub -l h_rt={cluster.time} -j y -pe smp 10 -cwd"
 cluster-config: "config/cluster.yaml"
 # singularity
 #use-singularity: True
-#singularity-args: "--bind /usr/lib64/openmpi/ --bind /scratch/ --bind /wynton/home/doudna/bellieny-rabelo/"
 # Job resources
 #set-resources:
 #  - helloSingularity:mem_mb=1000
 #  - helloSingularity:runtime=00:03:00
-# For some reasons time needs quotes to be read by snakemake
 #default-resources:
 #  - mem_mb=500
 #  - runtime="00:01:00"

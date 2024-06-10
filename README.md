@@ -95,7 +95,12 @@ make parallel
 <summary>4.1 Database Download</summary>
 <ul>
 
-  - Download the pre-built database through __
+  - Download the pre-built database:
+
+```
+aws s3 cp s3://snakedali.db/pdb_files_DAT.tar.gz <your_local_path>
+tar zxf <your_local_path>/pdb_files_DAT.tar.gz
+```
 
 
 </ul>
