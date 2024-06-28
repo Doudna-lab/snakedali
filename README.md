@@ -213,3 +213,14 @@ snakemake --snakefile snakedali.smk --configfile config/dali_template.yaml --pro
 
 </ul>
 </details>
+
+
+<details>
+<summary>7 Post Analysis Snakedali</summary>
+<ul>
+
+ - External scripts to integrate Snakedali outputs with T-Coffee are provided on `tcofee_integration`
+
+
+</ul>
+</details>
