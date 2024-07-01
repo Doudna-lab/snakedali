@@ -219,7 +219,9 @@ snakemake --snakefile snakedali.smk --configfile config/dali_template.yaml --pro
 <summary>7 Post Analysis Snakedali</summary>
 <ul>
 
- - External scripts to integrate Snakedali outputs with T-Coffee are provided on `tcofee_integration`
+ - The DALI + TCOFFEE workflow is broken down into two parts.
+  - 1. The first script, dali_out_to_fasta.py is a python script that takes in a DALI.txt output (that is, the search results for a DALI query against a database in DALI alignment format) and converts them into individual pariwise alignment files in FASTA format.
+  - 2. The second script is a wrapper that calls on the first script to take in an entire directory of DALI.txt output files to convert them into directories with FASTA format alignments. This script then calls TCOFFEE to merge the FASTA format alignments into multiple sequence alignments. One alignment is generated per DALI.txt output (that is, one DALI query searched against a database) such that there is an alignment generated for every single query. The script invokes TCOFFEE one more time to merge all such alignments into one final multiple-sequence alignment.
 
 
 </ul>
