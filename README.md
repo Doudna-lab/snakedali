@@ -22,7 +22,8 @@ It introduces automated input handling and a unified report that aggregates all 
 <summary>2 Citation</summary>
 <ul>
 
-'Structure Guided Discovery of Ancestral CRISPR-Cas13 Ribonucleases '
+Yoon, P.H., Zhang, Z., Loi, K.J., Adler, B.A., Lahiri, A., Vohra, K., Shi, H., Rabelo, D.B., Trinidad, M., Boger, R.S. and Al-Shimary, M.J., 2024. Structure-guided discovery of ancestral CRISPR-Cas13 ribonucleases. Science, p.eadq0553.
+
 
 </ul>
 </details>
@@ -80,6 +81,18 @@ make parallel
  - Future updates are planned to include a non-parallel version of Snakedali
  - More details on how to acquire the program can be found on the software's page:
    - http://ekhidna2.biocenter.helsinki.fi/dali/README.v5.html#install
+
+</ul>
+</details>
+
+<details>
+<summary>3.1 Anaconda </summary>
+<ul>
+
+- Install the AWS CLI to download the snakedali database directly from the command-line interface
+- A comprehensive guide on the installation is provided at the AWS page:
+ - Prerequisites: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-prereqs.html
+ - Installation Guide: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 </ul>
 </details>
