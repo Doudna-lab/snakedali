@@ -107,7 +107,7 @@ make parallel
 <details>
 <summary>4.1 Database Download</summary>
 <ul>
-
+  - With AWS CLI installed (see Section 3.4)
   - Download the pre-built database:
 
 ```
