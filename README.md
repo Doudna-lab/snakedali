@@ -86,7 +86,7 @@ make parallel
 </details>
 
 <details>
-<summary>3.1 Anaconda </summary>
+<summary>3.4 AWS CLI </summary>
 <ul>
 
 - Install the AWS CLI to download the snakedali database directly from the command-line interface
