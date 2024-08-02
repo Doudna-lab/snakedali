@@ -119,7 +119,7 @@ def main():
 	# === Inputs
 	query_name = str(snakemake.wildcards.query_name)
 	output_dali_list = list(snakemake.input.alignment_list)
-	query_dat_path = list(snakemake.input.query_dat)
+	query_dat_path = str(snakemake.input.query_dat)
 	# === Outputs
 	aggregated_report = str(snakemake.output.aggregated_report)
 	# === Params
@@ -147,6 +147,7 @@ def main():
 		final_converted_id_dict = {}
 		try:
 			data_valid = True
+			query_dict = merged_dali_parsed_dict[query]
 		except KeyError:
 			data_valid = False
 			pd.DataFrame().to_excel(aggregated_report)

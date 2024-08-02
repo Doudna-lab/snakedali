@@ -114,7 +114,7 @@ rule consolidate_reports:
 	input:
 		alignment_list = expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}.txt",
 			run=config["run"],batch_index=batch_index),
-		query_dat = lambda wildcards: glob.glob("{input_dir}/{{query_name}}.dat".format(
+		query_dat = lambda wildcards: ("{input_dir}/{{query_name}}.dat".format(
 			input_dir=config["input_dir"]
 		))
 	output:
@@ -124,7 +124,10 @@ rule consolidate_reports:
 	message:
 		"""
 Aggregate dali outputs for query {wildcards.query_name}: 
-	--> {output.aggregated_report} 
+	--> Pull Query dat from: {input.query_dat}
+	--> Generate Report on: {output.aggregated_report}
+	
+	Wildcads: {wildcards} 
 		"""
 	script:
 		"py/aggregate_report.py"
