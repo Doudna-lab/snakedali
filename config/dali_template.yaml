@@ -29,5 +29,6 @@ id_convert: "support_data/clustered_AFDB_structure_key.txt"
 # Do not change: Range of batches within the database to be processed
 batch_range: [0,2302]
 
-# PDB entry names without file extensions
+# PDB file names without file extensions
+# !!! These files are expected to be found on input_dir !!!
 query_name: [""] # e.g.: ["5id6A", "4dynA", "4an8A"]

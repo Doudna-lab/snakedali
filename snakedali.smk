@@ -7,6 +7,7 @@ batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 
 # Prep run on UCSF's Wynthon HPC
 # module load Sali anaconda/py311-2024.02 mpi/openmpi-x86_64 CBI
+# conda activate snake
 
 # Cluster run template
 # nohup snakemake --snakefile snakedali.smk --configfile config/dali_template.yaml --profile profile/ &
@@ -14,6 +15,9 @@ batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 # noinspection SmkAvoidTabWhitespace
 rule all:
 	input:
+		# Exports PDB Formatted Files to DAT files
+		expand("{run}/query/{query_name}A.dat",
+			run=config["run"],query_name=config["query_name"]),
 		# Creates a text list containing all database entry IDs in preparation for dalilite
 		expand("{run}/dali_run_elements/batches/batch_{batch_index}/list_batch_{batch_index}.txt",
 			run=config["run"],batch_index=batch_index),
@@ -23,6 +27,31 @@ rule all:
 		# Aggregate structural alignment results in a single xlsx spreadsheet
 		expand("{run}/results/{query_name}/{query_name}_daliout.xlsx",
 			run=config["run"],query_name=config["query_name"])
+
+# noinspection SmkAvoidTabWhitespace
+rule dali_import:
+	input:
+		query_pdb = lambda wildcards: glob.glob("{input_dir}/{query_name}.pdb".format(
+			input_dir=config["input_dir"],query_name=wildcards.query_name
+		)),
+	output:
+		query_dat = "{run}/query/{query_name}A.dat",
+	params:
+		dali_path=config['dali_path'],
+		dat_directory="{run}/query"
+	message:
+		"""
+Perform PDB Data Import with DaliLIte:
+PDB Query path:
+	--> {input.query_pdb}
+DAT Formatted Files:
+	--> {output.query_dat}
+		"""
+	shell:
+		"""
+		mkdir -p {params.dat_directory}
+		{params.dali_path}/import.pl --pdbfile {input.query_pdb} --pdbid {wildcards.query_name} --dat {params.dat_directory}
+		"""
 
 # noinspection SmkAvoidTabWhitespace
 rule create_list_input:
@@ -45,9 +74,7 @@ Based on DAT database:
 # noinspection SmkAvoidTabWhitespace
 rule dali_run:
 	input:
-		query_dat = lambda wildcards: glob.glob("{input_dir}/{query_name}.dat".format(
-			input_dir=config["input_dir"],query_name=wildcards.query_name
-		)),
+		query_dat = "{run}/query/{query_name}A.dat",
 		target_entries_list = "{run}/dali_run_elements/batches/batch_{batch_index}/list_batch_{batch_index}.txt"
 	output:
 		output_dali ="{run}/alignments/{query_name}/batches/batch_{batch_index}/{query_name}.txt"
@@ -114,9 +141,7 @@ rule consolidate_reports:
 	input:
 		alignment_list = expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}.txt",
 			run=config["run"],batch_index=batch_index),
-		query_dat = lambda wildcards: ("{input_dir}/{{query_name}}.dat".format(
-			input_dir=config["input_dir"]
-		))
+		query_dat = "{run}/query/{query_name}A.dat"
 	output:
 		aggregated_report = "{run}/results/{query_name}/{query_name}_daliout.xlsx"
 	params:
