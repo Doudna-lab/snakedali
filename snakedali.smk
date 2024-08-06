@@ -22,7 +22,7 @@ rule all:
 		expand("{run}/dali_run_elements/batches/batch_{batch_index}/list_batch_{batch_index}.txt",
 			run=config["run"],batch_index=batch_index),
 		# Runs the structural alignment and allocate the final outputs according to the config file variables
-		expand("{run}/alignments/{query_name}/batches/batch_{batch_index}/{query_name}.txt",
+		expand("{run}/alignments/{query_name}/batches/batch_{batch_index}/{query_name}A.txt",
 			run=config["run"],query_name=config["query_name"], batch_index=batch_index),
 		# Aggregate structural alignment results in a single xlsx spreadsheet
 		expand("{run}/results/{query_name}/{query_name}_daliout.xlsx",
@@ -81,12 +81,12 @@ rule dali_run:
 		query_dat = "{run}/query/{query_name}/{query_name}A.dat",
 		target_entries_list = "{run}/dali_run_elements/batches/batch_{batch_index}/list_batch_{batch_index}.txt"
 	output:
-		output_dali ="{run}/alignments/{query_name}/batches/batch_{batch_index}/{query_name}.txt"
+		output_dali ="{run}/alignments/{query_name}/batches/batch_{batch_index}/{query_name}A.txt"
 	params:
 		tmpdir = config['tmpdir'],
 		dali_path = config['dali_path'],
 		run_time_bechmark = "dali_run_time",
-		input_dir = config["input_dir"],
+		input_dir = "{run}/query/{query_name}",
 		dat_database = lambda wildcards: glob.glob("{db_dir}/pdb_files_DAT/batch_{batch_index}".format(
 			db_dir=config["db_dir"], batch_index=wildcards.batch_index)),
 	threads:
@@ -124,7 +124,7 @@ OUTPUT:
 		ln -s {input.target_entries_list} db_entry_list || true		
 		start_time=`date +%s`
 		{params.dali_path}/dali.pl \
-		--cd1 {wildcards.query_name} \
+		--cd1 {wildcards.query_name}A \
 		--db db_entry_list \
 		--dat1 query_dat \
 		--dat2 db_dat \
@@ -134,16 +134,16 @@ OUTPUT:
 		--outfmt "summary,alignments"
 		
 		echo $(expr `date +%s` - $start_time) >> {params.run_time_bechmark}_{threads}p.txt
-		mv {params.run_time_bechmark}_{threads}p.txt {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{params.run_time_bechmark}_{threads}p_{wildcards.query_name}.txt
+		mv {params.run_time_bechmark}_{threads}p.txt {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{params.run_time_bechmark}_{threads}p_{wildcards.query_name}A.txt
 		
 		echo MOVE RESULTS TO PERMANENT PATH
-		mv {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}.txt
+		mv {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}A.txt {wildcards.run}/alignments/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/{wildcards.query_name}A.txt
 		"""
 
 # noinspection SmkAvoidTabWhitespace
 rule consolidate_reports:
 	input:
-		alignment_list = expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}.txt",
+		alignment_list = expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}A.txt",
 			run=config["run"],batch_index=batch_index),
 		query_dat = "{run}/query/{query_name}/{query_name}A.dat"
 	output:
