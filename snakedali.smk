@@ -16,7 +16,7 @@ batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 rule all:
 	input:
 		# Exports PDB Formatted Files to DAT files
-		expand("{run}/query/{query_name}A.dat",
+		expand("{run}/query/{query_name}/{query_name}A.dat",
 			run=config["run"],query_name=config["query_name"]),
 		# Creates a text list containing all database entry IDs in preparation for dalilite
 		expand("{run}/dali_run_elements/batches/batch_{batch_index}/list_batch_{batch_index}.txt",
@@ -35,10 +35,11 @@ rule dali_import:
 			input_dir=config["input_dir"],query_name=wildcards.query_name
 		)),
 	output:
-		query_dat = "{run}/query/{query_name}A.dat",
+		query_dat = "{run}/query/{query_name}/{query_name}A.dat",
 	params:
 		dali_path=config['dali_path'],
-		dat_directory="{run}/query"
+		tmp_dat_directory="{run}/query/tmp",
+		dat_directory="{run}/query/{query_name}"
 	message:
 		"""
 Perform PDB Data Import with DaliLIte:
@@ -50,7 +51,10 @@ DAT Formatted Files:
 	shell:
 		"""
 		mkdir -p {params.dat_directory}
-		{params.dali_path}/import.pl --pdbfile {input.query_pdb} --pdbid {wildcards.query_name} --dat {params.dat_directory}
+		mkdir -p {params.tmp_dat_directory}
+		cd {params.dat_directory}
+		{params.dali_path}/import.pl --pdbfile {input.query_pdb} --pdbid {wildcards.query_name} --dat {params.tmp_dat_directory}
+		mv {params.tmp_dat_directory}/{wildcards.query_name}* {output.query_dat}
 		"""
 
 # noinspection SmkAvoidTabWhitespace
@@ -74,7 +78,7 @@ Based on DAT database:
 # noinspection SmkAvoidTabWhitespace
 rule dali_run:
 	input:
-		query_dat = "{run}/query/{query_name}A.dat",
+		query_dat = "{run}/query/{query_name}/{query_name}A.dat",
 		target_entries_list = "{run}/dali_run_elements/batches/batch_{batch_index}/list_batch_{batch_index}.txt"
 	output:
 		output_dali ="{run}/alignments/{query_name}/batches/batch_{batch_index}/{query_name}.txt"
@@ -141,7 +145,7 @@ rule consolidate_reports:
 	input:
 		alignment_list = expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}.txt",
 			run=config["run"],batch_index=batch_index),
-		query_dat = "{run}/query/{query_name}A.dat"
+		query_dat = "{run}/query/{query_name}/{query_name}A.dat"
 	output:
 		aggregated_report = "{run}/results/{query_name}/{query_name}_daliout.xlsx"
 	params:
