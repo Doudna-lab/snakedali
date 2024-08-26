@@ -19,16 +19,20 @@ dali_path: "DaliLite.v5/bin"
 # According to the 'cluster' variable in: profile/config.yaml
 threads: 10
 
-# Do not change: Filename prefix for individual lists of entry IDs
+# DO NOT CHANGE: Filename prefix for individual lists of entry IDs
 dat_id_list_prefix: "list_batch_"
 
-# Alphafold ID conversion table
+# DO NOT CHANGE: Alphafold ID conversion table
 id_convert: "support_data/clustered_AFDB_structure_key.txt"
 
 # === Run-associated variables
-# Do not change: Range of batches within the database to be processed
-batch_range: [0,2302]
 
 # PDB file names without file extensions
-# !!! These files are expected to be found on input_dir !!!
-query_name: [""] # e.g.: ["5id6A", "4dynA", "4an8A"]
+# !!! These files are expected to be found on {input_dir} !!!
+query_name: [""] # e.g.: ["5id6", "4dyn", "4an8"]
+
+# DO NOT CHANGE: Range of batches within the database to be processed
+batch_range: [0,2302]
+
+# DO NOT CHANGE: Apptainer/Singularity Container Path
+singularity_path: "apptainer_sif/import_container.sif"

@@ -6,7 +6,7 @@ import glob
 batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 
 # Prep run on UCSF's Wynthon HPC
-# module load Sali anaconda/py311-2024.02 mpi/openmpi-x86_64 CBI
+# module load Sali conda-forge/py310-24.3.0 mpi/openmpi-x86_64 CBI
 # conda activate snake
 
 # Cluster run template
@@ -33,11 +33,13 @@ rule dali_import:
 	input:
 		query_pdb = lambda wildcards: glob.glob("{input_dir}/{query_name}.pdb".format(
 			input_dir=config["input_dir"],query_name=wildcards.query_name
-		)),
+		))
 	output:
 		query_dat = "{run}/query/{query_name}/{query_name}A.dat",
 	params:
+		singularity_path = config['singularity_path'],
 		dali_path=config['dali_path'],
+		dat_directory_parent="{run}/query",
 		tmp_dat_directory="{run}/query/tmp",
 		dat_directory="{run}/query/{query_name}"
 	message:
@@ -52,8 +54,8 @@ DAT Formatted Files:
 		"""
 		mkdir -p {params.dat_directory}
 		mkdir -p {params.tmp_dat_directory}
+		apptainer exec --bind {params.dat_directory_parent} {params.singularity_path} import.pl --pdbfile {input.query_pdb} --pdbid {wildcards.query_name} --dat {params.tmp_dat_directory}		
 		cd {params.dat_directory}
-		{params.dali_path}/import.pl --pdbfile {input.query_pdb} --pdbid {wildcards.query_name} --dat {params.tmp_dat_directory}
 		mv {params.tmp_dat_directory}/{wildcards.query_name}* {output.query_dat}
 		"""
 

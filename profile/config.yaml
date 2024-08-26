@@ -12,8 +12,11 @@ rerun-triggers: 'mtime'
 
 cluster: "qsub -l h_rt={cluster.time} -j y -pe smp 10 -cwd"
 cluster-config: "config/cluster.yaml"
+
 # singularity
 #use-singularity: True
+#singularity-args: "-B tmp"
+
 # Job resources
 #set-resources:
 #  - helloSingularity:mem_mb=1000
