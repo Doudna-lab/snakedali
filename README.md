@@ -12,7 +12,7 @@
 <details>
 <summary>1 What is Snakedali?</summary>
 
-Snakedali is the Snakemake implementation of the multithreaded version of DaliLite v5 to align PDB queries to a pre-built Alphafold database. 
+Snakedali is the Snakemake implementation of the **multithreaded version** of DaliLite v5 to align PDB queries to a pre-built Alphafold database. It is designed to function on HPCs (High-Performance Clusters) and is specifically tailored to work with the SGE workload manager out-of-the-box.
 It introduces automated input handling and a unified report that aggregates all queries and hits in a single .xlsx.
 
 
