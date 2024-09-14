@@ -184,7 +184,20 @@ git lfs pull
 </details>
 
 <details>
-<summary>5.2 Snakemake Profile</summary>
+<summary>5.2 Create Environments</summary>
+<ul>
+
+ - Some steps of Snakedali rely on Anaconda environments. 
+ - Because some HPCs might not be compatible with Anaconda, we implement the conda environments directly on the Snakemake shell.
+ - To do that, first we create the conda environments:
+
+    ```conda env create -f envs/biopympi.yaml```
+
+</ul>
+</details>
+
+<details>
+<summary>5.3 Snakemake Profile</summary>
 <ul>
   
   - Snakedali was designed to work with `(Sun Grid Engine) SGE` job scheduler

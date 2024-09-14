@@ -16,6 +16,14 @@ tmpdir: '$TMPDIR'
 # Path to Dali's binary folder
 dali_path: "DaliLite.v5/bin"
 
+# Path to T-COFFEE binary
+tcoffee_bin: "/wynton/home/doudna/bellieny-rabelo/.t_coffee/bin/linux/t_coffee"
+tcoffee_1st_params: "-aln |input| -output fasta_aln -matrix=blosum30mt"
+tcoffee_2nd_params: "-aln |input| -output fasta_aln -matrix=blosum30mt -usetree= |tree|"
+
+# DO NOT CHANGE: Apptainer/Singularity Container Path
+singularity_path: "apptainer_sif/import_container.sif"
+
 # According to the 'cluster' variable in: profile/config.yaml
 threads: 10
 
@@ -33,6 +41,3 @@ query_name: [""] # e.g.: ["5id6", "4dyn", "4an8"]
 
 # DO NOT CHANGE: Range of batches within the database to be processed
 batch_range: [0,2302]
-
-# DO NOT CHANGE: Apptainer/Singularity Container Path
-singularity_path: "apptainer_sif/import_container.sif"

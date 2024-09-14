@@ -6,11 +6,11 @@ import glob
 batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 
 # Prep run on UCSF's Wynthon HPC
-# module load Sali conda-forge/py310-24.3.0 mpi/openmpi-x86_64 CBI
+# module load Sali CBI miniforge3/24.3.0-0 mpi/openmpi-x86_64
 # conda activate snake
 
 # Cluster run template
-# nohup snakemake --snakefile snakedali.smk --configfile config/dali_template.yaml --profile profile/ &
+# nohup snakemake --snakefile snakedali.smk --configfile config/dali_bmarking.yaml --profile profile &
 
 # noinspection SmkAvoidTabWhitespace
 rule all:
@@ -26,7 +26,10 @@ rule all:
 			run=config["run"],query_name=config["query_name"], batch_index=batch_index),
 		# Aggregate structural alignment results in a single xlsx spreadsheet
 		expand("{run}/results/{query_name}/{query_name}_daliout.xlsx",
-			run=config["run"],query_name=config["query_name"])
+			run=config["run"],query_name=config["query_name"]),
+		# Generate FASTA alignments from Dalilite results
+		expand("{run}/alignments/{query_name}/tcoffee/pairwise_alignments/fasta_pairwise_manifest.txt",
+		run=config["run"],query_name=config["query_name"])
 
 # noinspection SmkAvoidTabWhitespace
 rule dali_import:
@@ -112,7 +115,7 @@ OUTPUT:
 	shell:
 		"""
 		echo LOAD MODULE
-		module load CBI		
+		module load CBI || True
 		
 		echo CREATE SCRATCH FOLDER
 		echo {params.tmpdir}/{wildcards.query_name}/batches/batch_{wildcards.batch_index}/
@@ -162,3 +165,42 @@ Aggregate dali outputs for query {wildcards.query_name}:
 		"""
 	script:
 		"py/aggregate_report.py"
+
+# noinspection SmkAvoidTabWhitespace
+rule dali_to_fasta:
+	input:
+		alignment_list = expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}A.txt",
+			run=config["run"],batch_index=batch_index)
+	output:
+		fasta_manifest = "{run}/alignments/{query_name}/tcoffee/pairwise_alignments/fasta_pairwise_manifest.txt",
+	params:
+		pairwise_dir = "{run}/alignments/{query_name}/tcoffee/pairwise_alignments",
+		tree_unrooted = "{run}/alignments/{query_name}/tcoffee/newick_unrooted",
+		tcoffee_bin = config["tcoffee_bin"],
+		tcoffee_params = config["tcoffee_1st_params"]
+	threads:
+		config["threads"]
+	shell:
+		"""	
+		module load CBI miniforge3/24.3.0-0 || True		
+		eval "$(conda shell.bash hook)"
+		conda activate biopympi
+		export MAX_N_PID_4_TCOFFEE=8000000
+		mpirun -n {threads} python -u ../py/dali2fasta.py \
+		 --output_dir {params.pairwise_dir} \
+		 --manifest_out {output.fasta_manifest} \
+		 --input_prefix {wildcards.query_name} \
+		 --tcoffee_params "{params.tcoffee_params}" \
+		 --tcoffee_bin {params.tcoffee_bin} \
+		 --files_list {input.alignment_list}	
+		"""
+
+# rule local_tcoffee:
+# 	input:
+# 		fasta_manifest = "{run}/alignments/{query_name}/tcoffee/fasta_pairwise_manifest.txt"
+# 	output:
+#
+# 	shell:
+# 		"""
+# 		t_coffee -aln {params.fasta_manifest} -output fasta_aln -matrix=blosum30mt -usetree= {params.tree_unrooted}
+# 		"""
