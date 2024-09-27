@@ -6,20 +6,9 @@ import os
 import datetime
 import subprocess
 # == Installed Modules
+from Bio import SeqIO
 from mpi4py import MPI
 # == Project Modules
-
-
-def distribute_work(items, num_workers):
-	avg = len(items) / float(num_workers)
-	out = []
-	last = 0.0
-
-	while last < (len(items) - 1):
-		out.append(items[int(last):int(last + avg)])
-		last += avg
-
-	return out
 
 
 def extract_block_info_and_aa_sequences(alignment_block):
@@ -42,10 +31,24 @@ def extract_block_info_and_aa_sequences(alignment_block):
 	return block_info, ''.join(aa_query), ''.join(aa_subject)
 
 
-def process_dali_file_with_block_info(file_content, tcoffee_params, tcoffee_bin, input_prefix, output_dir):
+def remove_duplicates_seqrecords(seq_records):
+	seen = set()
+	unique_records = []
+
+	for record in seq_records:
+		key = (record.id, str(record.seq))  # Use a tuple of (ID, sequence) as the key
+		if key not in seen:
+			unique_records.append(record)
+			seen.add(key)
+
+	return unique_records
+
+
+def process_dali_file_with_block_info(file_content, input_prefix, output_dir):
 	# Processes the entire DALI file, extracting block information and amino acid sequences
 	# for each alignment block, and outputs to separate files without the header line
 	alignments = file_content.split('\n\n\n')
+	multi_seqrecords_list = []
 	processed_hits = []
 	temp_fasta_list_path = os.path.join(output_dir, "temp_fasta_list.txt")
 
@@ -69,29 +72,25 @@ def process_dali_file_with_block_info(file_content, tcoffee_params, tcoffee_bin,
 					# Write each output filename to temp_fasta_list.txt
 					temp_fasta_list_file.write(f"{output_path}\n")
 
-				# Format the t-coffee command
-				subprocess_cmd = re.sub(r"\|input\|", output_path, tcoffee_params)
-				formatted_cmd = f"{tcoffee_bin} {subprocess_cmd}"
-				# Execute the command using subprocess
-				try:
-					print(f"T-COFFEE COMMAND: {formatted_cmd}")
-					subprocess.run(formatted_cmd, shell=True, check=True)
-				except subprocess.CalledProcessError as e:
-					print(f"Error running t_coffee: {e}")
-					exit(0)
+				# Set up aggregated multi-fasta
+				aa_subject_nogaps = re.sub('-', '', aa_subject)
+				seq_record = SeqIO.SeqRecord(id=subject_id, seq=aa_subject_nogaps)
+				multi_seqrecords_list.append(seq_record)
 
-	return processed_hits
+	return processed_hits, multi_seqrecords_list
 
 
-def process_indices(local_indices, items_list, tcoffee_params, tcoffee_bin, input_prefix, output_directory):
+def process_indices(local_indices, items_list, input_prefix, output_directory):
 	list_of_processed_files_per_rank = []
+	list_of_multi_fasta_out = []
 	for index in range(len(local_indices)):
 		with open(items_list[index], 'r') as file:
 			file_content = file.read()
-			duo_fasta_path = process_dali_file_with_block_info(file_content, tcoffee_params, tcoffee_bin,
+			(duo_fasta_path, multi_fasta_out) = process_dali_file_with_block_info(file_content,
 															   input_prefix, output_directory)
 			list_of_processed_files_per_rank.extend(duo_fasta_path)
-	return list_of_processed_files_per_rank
+			list_of_multi_fasta_out.extend(multi_fasta_out)
+	return list_of_processed_files_per_rank, list_of_multi_fasta_out
 
 
 def main():
@@ -100,10 +99,8 @@ def main():
 	parser.add_argument("--input_prefix", dest="input_prefix", required=True)
 	parser.add_argument("--output_dir", dest="output_dir", required=True)
 	parser.add_argument("--files_list", nargs='+', dest="files_list", required=True)
-	parser.add_argument("--tcoffee_params", dest="tcoffee_params", required=True)
-	parser.add_argument("--tcoffee_bin", dest="tcoffee_bin", required=True)
 	parser.add_argument("--manifest_out", dest="manifest_out", required=True)
-
+	parser.add_argument("--multi_fasta_out", dest="multi_fasta_out", required=True)
 	args = parser.parse_args()
 
 	# Snakemake I/O
@@ -114,14 +111,12 @@ def main():
 	# === Params
 	# list_of_files_path = str(sys.argv[2])
 	list_of_files_path = args.manifest_out
-	# tcoffee_params = str(sys.argv[4])
-	tcoffee_params = args.tcoffee_params
-	tcoffee_bin = args.tcoffee_bin
 
 	# === Outputs
 	# output_directory = str(snakemake.output)
 	# output_directory = str(sys.argv[1])
 	output_directory = args.output_dir
+	multi_fasta_out = args.multi_fasta_out
 	# === Wildcards
 	# input_prefix = str(snakemake.wildcards.query_name)
 	# input_prefix = str(sys.argv[3])
@@ -151,17 +146,27 @@ def main():
 
 	current_time = datetime.datetime.now()
 	print(f"PROCESSING QUERY {input_prefix} on rank {rank} | Starting at {current_time}")
-	processed_files_per_rank = process_indices(local_indices,
-											   dali_alignment_list,
-											   tcoffee_params,
-											   tcoffee_bin,
-											   input_prefix,
-											   output_directory)
+	(processed_files_per_rank, multi_fasta_per_rank) = process_indices(local_indices,
+																	   dali_alignment_list,
+																	   input_prefix,
+																	   output_directory)
 
 	# Gather results from all processes
 	all_processed_files = comm.gather(processed_files_per_rank, root=0)
+	all_multi_fasta = comm.gather(multi_fasta_per_rank, root=0)
 
 	if rank == 0:
+		# Combine results on the root process
+		print(f"Combining results from {all_multi_fasta}")
+		combined_multifasta = []
+		for d in all_multi_fasta:
+			print(f"Processing {d}")
+			combined_multifasta.extend(d)
+		# Try to export directly from comm.gather
+		if combined_multifasta is not None:
+			combined_multifasta_unique = remove_duplicates_seqrecords(combined_multifasta)
+			SeqIO.write(combined_multifasta_unique, multi_fasta_out, format='fasta')
+
 		# Combine results on the root process
 		print(f"Combining results from {all_processed_files}")
 		combined_processed_files = []

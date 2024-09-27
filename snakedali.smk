@@ -165,6 +165,8 @@ Aggregate dali outputs for query {wildcards.query_name}:
 		"""
 	script:
 		"py/aggregate_report.py"
+# TODO: The pipeline branches here: (a) TCOFEE (b) RefSeq + MMseqs --> (b) will involve breaking down dali2fasta.py AND gret rid of the gaps
+# =>
 
 # noinspection SmkAvoidTabWhitespace
 rule dali_to_fasta:
@@ -173,11 +175,12 @@ rule dali_to_fasta:
 			run=config["run"],batch_index=batch_index)
 	output:
 		fasta_manifest = "{run}/alignments/{query_name}/tcoffee/pairwise_alignments/fasta_pairwise_manifest.txt",
+		aggregated_multi_fasta = "{run}/alignments/{query_name}/fasta/{query_name}_hits.fasta",
 	params:
 		pairwise_dir = "{run}/alignments/{query_name}/tcoffee/pairwise_alignments",
 		tree_unrooted = "{run}/alignments/{query_name}/tcoffee/newick_unrooted",
-		tcoffee_bin = config["tcoffee_bin"],
-		tcoffee_params = config["tcoffee_1st_params"]
+		# tcoffee_bin = config["tcoffee_bin"],
+		# tcoffee_params = config["tcoffee_1st_params"]
 	threads:
 		config["threads"]
 	shell:
@@ -185,13 +188,11 @@ rule dali_to_fasta:
 		module load CBI miniforge3/24.3.0-0 || True		
 		eval "$(conda shell.bash hook)"
 		conda activate biopympi
-		export MAX_N_PID_4_TCOFFEE=8000000
 		mpirun -n {threads} python -u ../py/dali2fasta.py \
 		 --output_dir {params.pairwise_dir} \
+		 --multi_fasta_out {output.aggregated_multi_fasta} \
 		 --manifest_out {output.fasta_manifest} \
 		 --input_prefix {wildcards.query_name} \
-		 --tcoffee_params "{params.tcoffee_params}" \
-		 --tcoffee_bin {params.tcoffee_bin} \
 		 --files_list {input.alignment_list}	
 		"""
 
