@@ -6,7 +6,15 @@ run: ""
 #   The <pdb_files_DAT> is a pre-built file that must be downloaded prior to Snakedali execution
 db_dir: ""
 
-# The pipeline assumes this is where *.dat files are stored
+# MMSEQS Database(s) path
+mmseqs_db_path: "" # "<my_path>/mmseqs_db"
+
+# Database(s) prefix(es)
+#   Each item in the list represents: (a) the internal directory where the db is located
+#   and (b) the actual prefix used to build each of the mmseqs databases
+db_prefix: ['refseq-bav/mmseqsDB_refseq-bav']
+
+# The pipeline assumes this is where *.pdb files are stored
 input_dir: ""
 
 # Commonly a temporary directory where intermediate files are generated and purged
@@ -17,7 +25,7 @@ tmpdir: '$TMPDIR'
 dali_path: "DaliLite.v5/bin"
 
 # Path to T-COFFEE binary
-tcoffee_bin: "/wynton/home/doudna/bellieny-rabelo/.t_coffee/bin/linux/t_coffee"
+tcoffee_bin: "" # "<path_to_tcoffee>/.t_coffee/bin/linux/t_coffee"
 tcoffee_1st_params: "-aln |input| -output fasta_aln -matrix=blosum30mt"
 tcoffee_2nd_params: "-aln |input| -output fasta_aln -matrix=blosum30mt -usetree= |tree|"
 
@@ -36,7 +44,7 @@ id_convert: "support_data/clustered_AFDB_structure_key.txt"
 # === Run-associated variables
 
 # PDB file names without file extensions
-# !!! These files are expected to be found on {input_dir} !!!
+#!!! == These files are expected to be found on {input_dir} == !!!
 query_name: [""] # e.g.: ["5id6", "4dyn", "4an8"]
 
 # DO NOT CHANGE: Range of batches within the database to be processed

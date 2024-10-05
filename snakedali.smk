@@ -28,8 +28,14 @@ rule all:
 		expand("{run}/results/{query_name}/{query_name}_daliout.xlsx",
 			run=config["run"],query_name=config["query_name"]),
 		# Generate FASTA alignments from Dalilite results
-		expand("{run}/alignments/{query_name}/tcoffee/pairwise_alignments/fasta_pairwise_manifest.txt",
-		run=config["run"],query_name=config["query_name"])
+		expand("{run}/alignments/{query_name}/fasta/pairwise_alignments/fasta_pairwise_manifest.txt",
+		run=config["run"],query_name=config["query_name"]),
+		# Expand list of sequence hits by running MMSEQS2 against different databases
+		expand("{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_result-mms_hits.tsv",
+			run=config["run"],query_name=config["query_name"], db_prefix=config['db_prefix']),
+		#
+		expand("{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_query_hits.fasta",
+		run=config["run"],query_name=config["query_name"], db_prefix=config['db_prefix'])
 
 # noinspection SmkAvoidTabWhitespace
 rule dali_import:
@@ -165,8 +171,6 @@ Aggregate dali outputs for query {wildcards.query_name}:
 		"""
 	script:
 		"py/aggregate_report.py"
-# TODO: The pipeline branches here: (a) TCOFEE (b) RefSeq + MMseqs --> (b) will involve breaking down dali2fasta.py AND gret rid of the gaps
-# =>
 
 # noinspection SmkAvoidTabWhitespace
 rule dali_to_fasta:
@@ -174,11 +178,11 @@ rule dali_to_fasta:
 		alignment_list = expand("{run}/alignments/{{query_name}}/batches/batch_{batch_index}/{{query_name}}A.txt",
 			run=config["run"],batch_index=batch_index)
 	output:
-		fasta_manifest = "{run}/alignments/{query_name}/tcoffee/pairwise_alignments/fasta_pairwise_manifest.txt",
+		fasta_manifest = "{run}/alignments/{query_name}/fasta/pairwise_alignments/fasta_pairwise_manifest.txt",
 		aggregated_multi_fasta = "{run}/alignments/{query_name}/fasta/{query_name}_hits.fasta",
 	params:
-		pairwise_dir = "{run}/alignments/{query_name}/tcoffee/pairwise_alignments",
-		tree_unrooted = "{run}/alignments/{query_name}/tcoffee/newick_unrooted",
+		pairwise_dir = "{run}/alignments/{query_name}/fasta/pairwise_alignments"
+		# tree_unrooted = "{run}/alignments/{query_name}/tcoffee/newick_unrooted",
 		# tcoffee_bin = config["tcoffee_bin"],
 		# tcoffee_params = config["tcoffee_1st_params"]
 	threads:
@@ -196,12 +200,53 @@ rule dali_to_fasta:
 		 --files_list {input.alignment_list}	
 		"""
 
-# rule local_tcoffee:
-# 	input:
-# 		fasta_manifest = "{run}/alignments/{query_name}/tcoffee/fasta_pairwise_manifest.txt"
-# 	output:
-#
-# 	shell:
-# 		"""
-# 		t_coffee -aln {params.fasta_manifest} -output fasta_aln -matrix=blosum30mt -usetree= {params.tree_unrooted}
-# 		"""
+# noinspection SmkAvoidTabWhitespace
+rule broad_seq_search_aa:
+	input:
+		aggregated_multi_fasta = "{run}/alignments/{query_name}/fasta/{query_name}_hits.fasta",
+		mmseqs_source_db = lambda wildcards: glob.glob("{mmseqs_db_path}/{{db_prefix}}".format(
+			mmseqs_db_path=config['mmseqs_db_path']))
+	output:
+		mmseqs_search_result = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_result-mms_hits.tsv"
+	params:
+		tmpdir = config['tmpdir'],
+		mmseqs_search_result_m8 = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_result-mms_m8.tsv",
+	message:
+		"""
+Create MMSEQS query databse from FASTA file:\n {input.aggregated_multi_fasta}
+Pull Source Database: {input.mmseqs_source_db}
+Writes single column hit results on: {output.mmseqs_search_result}
+		"""
+	shell:
+		"""
+		module load CBI miniforge3/24.3.0-0 || True
+		eval "$(conda shell.bash hook)"
+		conda activate mmseqs
+		mkdir -p {params.tmpdir}/{wildcards.query_name}/mmseqs
+		cd {params.tmpdir}/{wildcards.query_name}/mmseqs
+		
+		mmseqs createdb {input.aggregated_multi_fasta} {wildcards.query_name}_queryDB
+		mmseqs createindex {wildcards.query_name}_queryDB tmp
+		
+		mmseqs search {wildcards.query_name}_queryDB {input.mmseqs_source_db} {wildcards.query_name}_resultDB tmp --num-iterations 10 --start-sens 1 --sens-steps 3 -s 7
+		mmseqs convertalis {wildcards.query_name}_queryDB {input.mmseqs_source_db} {wildcards.query_name}_resultDB {wildcards.query_name}_resultDB.m8
+		mmseqs convertalis {wildcards.query_name}_queryDB {input.mmseqs_source_db} {wildcards.query_name}_resultDB --format-output "target" {wildcards.query_name}_resultDB_hits
+		mv {wildcards.query_name}_resultDB_hits {output.mmseqs_search_result}
+		mv {wildcards.query_name}_resultDB.m8 {params.mmseqs_search_result_m8}
+		"""
+
+# noinspection SmkAvoidTabWhitespace
+# TODO: Modify this script to work on argparse or sys.arg + invoke conda on shell
+rule retrieve_hits_fasta:
+	input:
+		mmseqs_search_result = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_result-mms_hits.tsv"
+	output:
+		hits_fasta = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_query_hits.fasta",
+		retrieval_report = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_summary_report.csv"
+	params:
+		col_names = "hit_id",
+		parent_dir = "{run}/alignments/{query_name}/mmseqs/results/gbk"
+	conda:
+		"envs/biopympi.yaml"
+	script:
+		"py/gather_fasta_entrez.py"
