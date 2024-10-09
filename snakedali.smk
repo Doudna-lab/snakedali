@@ -181,7 +181,10 @@ rule dali_to_fasta:
 		fasta_manifest = "{run}/alignments/{query_name}/fasta/pairwise_alignments/fasta_pairwise_manifest.txt",
 		aggregated_multi_fasta = "{run}/alignments/{query_name}/fasta/{query_name}_hits.fasta",
 	params:
-		pairwise_dir = "{run}/alignments/{query_name}/fasta/pairwise_alignments"
+		pairwise_dir = "{run}/alignments/{query_name}/fasta/pairwise_alignments",
+		fseek_clustered_representatives = config["fseek_clustered_representatives"],
+		id_converstion_table = config["id_convert"],
+		afdb_fasta = config["afdb_fasta"]
 		# tree_unrooted = "{run}/alignments/{query_name}/tcoffee/newick_unrooted",
 		# tcoffee_bin = config["tcoffee_bin"],
 		# tcoffee_params = config["tcoffee_1st_params"]
@@ -197,6 +200,9 @@ rule dali_to_fasta:
 		 --multi_fasta_out {output.aggregated_multi_fasta} \
 		 --manifest_out {output.fasta_manifest} \
 		 --input_prefix {wildcards.query_name} \
+		 --afdb_fasta {params.afdb_fasta} \
+		 --fseek_clusters {params.fseek_clustered_representatives} \
+		 --id_converstion {params.id_converstion_table} \
 		 --files_list {input.alignment_list}	
 		"""
 
@@ -210,6 +216,7 @@ rule broad_seq_search_aa:
 		mmseqs_search_result = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_result-mms_hits.tsv"
 	params:
 		tmpdir = config['tmpdir'],
+		mms_n_iterations = config['mms_n_iterations'],
 		mmseqs_search_result_m8 = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_result-mms_m8.tsv",
 	message:
 		"""
@@ -228,7 +235,7 @@ Writes single column hit results on: {output.mmseqs_search_result}
 		mmseqs createdb {input.aggregated_multi_fasta} {wildcards.query_name}_queryDB
 		mmseqs createindex {wildcards.query_name}_queryDB tmp
 		
-		mmseqs search {wildcards.query_name}_queryDB {input.mmseqs_source_db} {wildcards.query_name}_resultDB tmp --num-iterations 10 --start-sens 1 --sens-steps 3 -s 7
+		mmseqs search {wildcards.query_name}_queryDB {input.mmseqs_source_db} {wildcards.query_name}_resultDB tmp --num-iterations {params.mms_n_iterations} --start-sens 1 --sens-steps 3 -s 7
 		mmseqs convertalis {wildcards.query_name}_queryDB {input.mmseqs_source_db} {wildcards.query_name}_resultDB {wildcards.query_name}_resultDB.m8
 		mmseqs convertalis {wildcards.query_name}_queryDB {input.mmseqs_source_db} {wildcards.query_name}_resultDB --format-output "target" {wildcards.query_name}_resultDB_hits
 		mv {wildcards.query_name}_resultDB_hits {output.mmseqs_search_result}
@@ -244,9 +251,15 @@ rule retrieve_hits_fasta:
 		hits_fasta = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_query_hits.fasta",
 		retrieval_report = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_summary_report.csv"
 	params:
+		window_size = config["window_size"],
 		col_names = "hit_id",
 		parent_dir = "{run}/alignments/{query_name}/mmseqs/results/gbk"
 	conda:
 		"envs/biopympi.yaml"
 	script:
 		"py/gather_fasta_entrez.py"
+
+# noinspection SmkAvoidTabWhitespace
+# TODO: Use mince here -> conda env already created on Wynton
+rule call_crispr_regions:
+	input:

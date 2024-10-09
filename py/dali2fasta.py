@@ -5,10 +5,43 @@ import argparse
 import os
 import datetime
 import subprocess
+from collections import defaultdict
 # == Installed Modules
 from Bio import SeqIO
+import pandas as pd
 from mpi4py import MPI
 # == Project Modules
+
+
+# DEBUG
+ROOT_DIR = "/Users/bellieny/projects/snakedali/dump"
+# === Inputs
+dali_alignment_list = [f"{ROOT_DIR}/3800A.txt"]
+# === Params
+list_of_files_path = ""
+fseek_clusters = f"{ROOT_DIR}/fseek_clustered_afdb_representatives.txt"
+afdb_fasta = f"{ROOT_DIR}/sequences.fasta"
+id_converstion_path = f"{ROOT_DIR}/clustered_AFDB_structure_key.txt"
+# === Outputs
+# output_directory = args.output_dir
+# multi_fasta_out = args.multi_fasta_out
+# === Wildcards
+# input_prefix = args.input_prefix
+
+
+def format_conversion_dict(cluster_reps_tbl):
+	cluster_reps_pre = pd.read_csv(cluster_reps_tbl, sep="\t", header=None, low_memory=False)
+	cluster_reps_pre.index = cluster_reps_pre.iloc[:,1]
+	cluster_reps_dict = defaultdict(list)
+	for row in cluster_reps_pre.itertuples():
+		cluster_reps_dict[row.Index].append(row._1)
+	return cluster_reps_dict
+
+
+def ingest_conversion_table(id_converstion_table_path):
+	id_converstion_table = pd.read_csv(id_converstion_table_path, sep="\t", low_memory=False, names=['0', '1'])
+	converted_id_dict = dict(zip(id_converstion_table.iloc[:, 1], id_converstion_table.iloc[:, 0]))
+	return converted_id_dict
 
 
 def extract_block_info_and_aa_sequences(alignment_block):
@@ -48,7 +81,7 @@ def process_dali_file_with_block_info(file_content, input_prefix, output_dir):
 	# Processes the entire DALI file, extracting block information and amino acid sequences
 	# for each alignment block, and outputs to separate files without the header line
 	alignments = file_content.split('\n\n\n')
-	multi_seqrecords_list = []
+	multi_id_list = []
 	processed_hits = []
 	temp_fasta_list_path = os.path.join(output_dir, "temp_fasta_list.txt")
 
@@ -73,30 +106,57 @@ def process_dali_file_with_block_info(file_content, input_prefix, output_dir):
 					temp_fasta_list_file.write(f"{output_path}\n")
 
 				# Set up aggregated multi-fasta
-				aa_subject_nogaps = re.sub('-', '', aa_subject)
-				seq_record = SeqIO.SeqRecord(id=subject_id, seq=aa_subject_nogaps)
-				multi_seqrecords_list.append(seq_record)
+				# aa_subject_nogaps = re.sub('-', '', aa_subject)
+				# seq_record = SeqIO.SeqRecord(id=subject_id, seq=aa_subject_nogaps)
+				multi_id_list.append(subject_id)
 
-	return processed_hits, multi_seqrecords_list
+	return processed_hits, multi_id_list
 
 
-def process_indices(local_indices, items_list, input_prefix, output_directory):
+def process_indices(local_indices,
+					items_list,
+					input_prefix,
+					conversion_dict_id,
+					reference_fasta,
+					cluster_reps_tbl,
+					output_directory):
 	list_of_processed_files_per_rank = []
 	list_of_multi_fasta_out = []
+	cluster_reps_dict = format_conversion_dict(cluster_reps_tbl)
 	for index in range(len(local_indices)):
 		with open(items_list[index], 'r') as file:
 			file_content = file.read()
-			(duo_fasta_path, multi_fasta_out) = process_dali_file_with_block_info(file_content,
-															   input_prefix, output_directory)
+			(duo_fasta_path, multi_fasta_id_list) = process_dali_file_with_block_info(file_content,
+																					  input_prefix, output_directory)
+			# This will export a list of FASTA files for downstream processing by T-COFFEE
 			list_of_processed_files_per_rank.extend(duo_fasta_path)
-			list_of_multi_fasta_out.extend(multi_fasta_out)
-	return list_of_processed_files_per_rank, list_of_multi_fasta_out
+			# This will prepare an export with a list of FASTA files for downstream processing by MMSEQS2
+			converted_id_list = [cluster_reps_dict[conversion_dict_id[fasta_id]] for fasta_id in multi_fasta_id_list]
+			list_of_multi_fasta_out.extend(converted_id_list)
+
+	# Gather FASTA records of cluster members from
+	# 	the representatives present at the DALI alignment
+	seqrecord_list = []
+	for fasta_id in list_of_multi_fasta_out:
+		pattern = re.compile(fasta_id)
+		# Parse the file iteratively
+		for record in SeqIO.parse(reference_fasta, "fasta"):  # Adjust the format if not GenBank
+			# Search using regex in the desired field of the record
+			if not pattern.search(str(record.id)):
+				continue
+			seqrecord_list.append(record)
+			break
+
+	return list_of_processed_files_per_rank, seqrecord_list
 
 
 def main():
 	# Parse the command-line arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--input_prefix", dest="input_prefix", required=True)
+	parser.add_argument("--afdb_fasta", dest="afdb_fasta", required=True)
+	parser.add_argument("--fseek_clusters", dest="fseek_clusters", required=True)
+	parser.add_argument("--id_converstion", dest="id_converstion", required=True)
 	parser.add_argument("--output_dir", dest="output_dir", required=True)
 	parser.add_argument("--files_list", nargs='+', dest="files_list", required=True)
 	parser.add_argument("--manifest_out", dest="manifest_out", required=True)
@@ -105,13 +165,12 @@ def main():
 
 	# Snakemake I/O
 	# === Inputs
-	# dali_alignment_list = list(snakemake.input.alignment_list)
-	# dali_alignment_list = list(sys.argv[5:])
 	dali_alignment_list = list(args.files_list)
 	# === Params
-	# list_of_files_path = str(sys.argv[2])
 	list_of_files_path = args.manifest_out
-
+	fseek_clusters = args.fseek_clusters
+	afdb_fasta = args.afdb_fasta
+	id_converstion_path = args.id_converstion
 	# === Outputs
 	# output_directory = str(snakemake.output)
 	# output_directory = str(sys.argv[1])
@@ -124,6 +183,9 @@ def main():
 
 	print(f"Input alignment captured in list: {dali_alignment_list}")
 
+	# === Ingest conversion table
+	id_conversion_dict = ingest_conversion_table(id_converstion_path)
+	
 	# Initialize MPI
 	comm = MPI.COMM_WORLD
 	rank = comm.Get_rank()
@@ -149,6 +211,9 @@ def main():
 	(processed_files_per_rank, multi_fasta_per_rank) = process_indices(local_indices,
 																	   dali_alignment_list,
 																	   input_prefix,
+																	   id_conversion_dict,
+																	   afdb_fasta,
+																	   fseek_clusters,
 																	   output_directory)
 
 	# Gather results from all processes

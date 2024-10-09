@@ -4,10 +4,20 @@ run: ""
 
 # The pipeline assumes the subdir called <pdb_files_DAT> is under this path
 #   The <pdb_files_DAT> is a pre-built file that must be downloaded prior to Snakedali execution
+#   Consult the README.md and download it from snakedali's aws bucket
 db_dir: ""
 
 # MMSEQS Database(s) path
 mmseqs_db_path: "" # "<my_path>/mmseqs_db"
+
+# AFDB Fasta file path
+#   This file can be downloaded from AFDB's FTP page: https://ftp.ebi.ac.uk/pub/databases/alphafold/
+#   Add the path where it's been downloaded
+afdb_fasta: "" # "<mypath>/sequences.fasta"
+
+#   The <fseek_clustered_afdb_representatives.txt> is a pre-built file that must be downloaded prior to Snakedali execution
+#   Consult the README.md and download it from snakedali's aws bucket
+fseek_clustered_representatives: ""
 
 # Database(s) prefix(es)
 #   Each item in the list represents: (a) the internal directory where the db is located
@@ -16,6 +26,12 @@ db_prefix: ['refseq-bav/mmseqsDB_refseq-bav']
 
 # The pipeline assumes this is where *.pdb files are stored
 input_dir: ""
+
+# Window Size
+window_size: 10000
+
+# MMSEQS2 n of iterations
+mms_n_iterations: 10
 
 # Commonly a temporary directory where intermediate files are generated and purged
 #   Set up this environment variable prior to Snakedali execution
