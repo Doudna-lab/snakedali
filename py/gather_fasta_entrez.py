@@ -3,6 +3,7 @@ import re
 import time
 import copy
 import os
+import sys
 # Installed modules
 import urllib.request
 import urllib.error
@@ -15,11 +16,11 @@ from bioservices import UniProt
 
 
 # DEBUG INPUTS
-mmseqs_search_path = "/Users/bellieny/projects/snakedali/dump/toy_mmseq_result.tsv"
-efecth_db_list = ['nuccore', 'nucleotide']
-col_names = 'hit_id'
-wsize = 2000
-parent_dir = "/Users/bellieny/projects/snakedali/dump/gbk"
+# mmseqs_search_path = "/Users/bellieny/projects/snakedali/dump/toy_mmseq_result.tsv"
+#
+# col_names = 'hit_id'
+# window_size = 2000
+# parent_dir = "/Users/bellieny/projects/snakedali/dump/gbk"
 # config_path = "/groups/doudna/team_resources/toolbox/phyrec_screening/config/phyrec_processing.yaml"
 # # Load config files
 # import yaml
@@ -240,22 +241,39 @@ def attach_label_to_fasta(seqrecords_list, id_to_label_df):
 
 
 def main():
-	# Snakemake Imports
-	#   SMK Inputs
-	mmseqs_search_path = str(snakemake.input.mmseqs_search_result)
-	#   SMK Params
-	col_names = str(snakemake.params.col_names)
-	parent_dir = str(snakemake.params.parent_dir)
-	#   SMK Outputs
-	retrieval_report = str(snakemake.output.retrieval_report)
-	output_fasta_hits = str(snakemake.output.hits_fasta)
-	#	SMK Wildcards
-	query_name = str(snakemake.wildcards.query_name)
-	db_prefix = str(snakemake.wildcards.db_prefix)
+	# # Snakemake Imports
+	# #   SMK Inputs
+	# mmseqs_search_path = str(snakemake.input.mmseqs_search_result)
+	# #   SMK Outputs
+	# retrieval_report = str(snakemake.output.retrieval_report)
+	# output_fasta_hits = str(snakemake.output.hits_fasta)
+	# #   SMK Params
+	# col_names = str(snakemake.params.col_names)
+	# parent_dir = str(snakemake.params.parent_dir)
+	# window_size = int(snakemake.params.window_size)
+	# #	SMK Wildcards
+	# query_name = str(snakemake.wildcards.query_name)
+	# db_prefix = str(snakemake.wildcards.db_prefix)
+
+	#	Inputs
+	mmseqs_search_path = str(sys.argv[1])
+	#   Outputs
+	retrieval_report = str(sys.argv[2])
+	output_fasta_region = str(sys.argv[3])
+	#   Params
+	col_names = str(sys.argv[4])
+	parent_dir = str(sys.argv[5])
+	window_size = int(sys.argv[6])
+	#	Wildcards
+	# query_name = str(sys.argv[7])
+	# db_prefix = str(sys.argv[8])
 
 	# Entrez authentication
 	print("Entrez login")
 	Entrez.email = "thedoudnalab@gmail.com"
+
+	# NCBI databases to search
+	efecth_db_list = ['nuccore', 'nucleotide']
 
 	# Import blastout table
 	col_names_list = col_names.split(" ")
@@ -275,7 +293,7 @@ def main():
 
 	# Narrow down Genbank files based on hit UIDs
 	print("Extracting relevant features from GenBank objects")
-	targeg_gb_dict, target_hit_dict = gb_plier(gb_seqrec_per_query, hit_to_link, wsize)
+	targeg_gb_dict, target_hit_dict = gb_plier(gb_seqrec_per_query, hit_to_link, window_size)
 
 	# Parse hit sequences to FASTA file
 	hit_seq_record_list = ncbi_fetch(unique_mms_hits, 'protein', 'fasta')
@@ -290,7 +308,7 @@ def main():
 	df.to_csv(retrieval_report, index=False)
 
 	# hit_taxid_seq_record_list = attach_label_to_fasta(hit_seq_record_list, id_to_taxid)
-	export_records(hit_seq_record_list, output_fasta_hits, 'fasta')
+	export_records(hit_seq_record_list, output_fasta_region, 'fasta')
 
 
 if __name__ == "__main__":

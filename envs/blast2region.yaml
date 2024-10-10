@@ -1,0 +1,8 @@
+name: blast2region
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - biopython
+  - pyyaml
+  - bioservices

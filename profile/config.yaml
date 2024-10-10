@@ -1,17 +1,21 @@
 latency-wait: 120
 reason: True
+#use-conda: True
 rerun-incomplete: True
 show-failed-logs: True
 keep-going: True
 printshellcmds: True
 # Cluster submission
-jobname: "{rule}.{jobid}"              # Provide a custom name for the jobscript that is submitted to the cluster.
+jobname: "testrun.{jobid}"              # Provide a custom name for the jobscript that is submitted to the cluster.
 jobs: 600                              #Use at most N CPU cluster/cloud jobs in parallel.
 
 rerun-triggers: 'mtime'
 
 cluster: "qsub -l h_rt={cluster.time} -j y -pe smp 10 -cwd"
 cluster-config: "config/cluster.yaml"
+
+# Working Directory
+directory: "snake_log"
 
 # singularity
 #use-singularity: True

@@ -10,18 +10,18 @@ from collections import defaultdict
 from Bio import SeqIO
 import pandas as pd
 from mpi4py import MPI
-# == Project Modules
-
-
-# DEBUG
-ROOT_DIR = "/Users/bellieny/projects/snakedali/dump"
-# === Inputs
-dali_alignment_list = [f"{ROOT_DIR}/3800A.txt"]
-# === Params
-list_of_files_path = ""
-fseek_clusters = f"{ROOT_DIR}/fseek_clustered_afdb_representatives.txt"
-afdb_fasta = f"{ROOT_DIR}/sequences.fasta"
-id_converstion_path = f"{ROOT_DIR}/clustered_AFDB_structure_key.txt"
+# # == Project Modules
+#
+#
+# # DEBUG
+# ROOT_DIR = "/Users/bellieny/projects/snakedali/dump"
+# # === Inputs
+# dali_alignment_list = [f"{ROOT_DIR}/3800A.txt"]
+# # === Params
+# list_of_files_path = ""
+# fseek_clusters = f"{ROOT_DIR}/toy_fseek_clustered_afdb_representatives.txt"
+# afdb_fasta = f"{ROOT_DIR}/toy_sequences.fasta"
+# id_converstion_path = f"{ROOT_DIR}/clustered_AFDB_structure_key.txt"
 # === Outputs
 # output_directory = args.output_dir
 # multi_fasta_out = args.multi_fasta_out
@@ -131,7 +131,7 @@ def process_indices(local_indices,
 			# This will export a list of FASTA files for downstream processing by T-COFFEE
 			list_of_processed_files_per_rank.extend(duo_fasta_path)
 			# This will prepare an export with a list of FASTA files for downstream processing by MMSEQS2
-			converted_id_list = [cluster_reps_dict[conversion_dict_id[fasta_id]] for fasta_id in multi_fasta_id_list]
+			converted_id_list = [item for fasta_id in multi_fasta_id_list for item in cluster_reps_dict[conversion_dict_id[fasta_id.strip('A')]]]
 			list_of_multi_fasta_out.extend(converted_id_list)
 
 	# Gather FASTA records of cluster members from
@@ -139,10 +139,13 @@ def process_indices(local_indices,
 	seqrecord_list = []
 	for fasta_id in list_of_multi_fasta_out:
 		pattern = re.compile(fasta_id)
+		# print(f"Compiling Pattern {fasta_id}")
 		# Parse the file iteratively
 		for record in SeqIO.parse(reference_fasta, "fasta"):  # Adjust the format if not GenBank
 			# Search using regex in the desired field of the record
-			if not pattern.search(str(record.id)):
+			clean_id = re.sub(r"\w+:\w+\-(\w+)\-\w+", r"\1", record.id)
+			# print(f"Searching {clean_id} == Original id: {record.id}")
+			if not pattern.search(str(clean_id)):
 				continue
 			seqrecord_list.append(record)
 			break

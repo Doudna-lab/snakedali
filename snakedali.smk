@@ -29,13 +29,16 @@ rule all:
 			run=config["run"],query_name=config["query_name"]),
 		# Generate FASTA alignments from Dalilite results
 		expand("{run}/alignments/{query_name}/fasta/pairwise_alignments/fasta_pairwise_manifest.txt",
-		run=config["run"],query_name=config["query_name"]),
+			run=config["run"],query_name=config["query_name"]),
 		# Expand list of sequence hits by running MMSEQS2 against different databases
 		expand("{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_result-mms_hits.tsv",
 			run=config["run"],query_name=config["query_name"], db_prefix=config['db_prefix']),
-		#
-		expand("{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_query_hits.fasta",
-		run=config["run"],query_name=config["query_name"], db_prefix=config['db_prefix'])
+		# Recover genomic context from hits found through MMSEQS2
+		expand("{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_hit_region.fasta",
+			run=config["run"],query_name=config["query_name"], db_prefix=config['db_prefix']),
+		# Predict CRISPR arrays on the recovered sequences
+		expand("{run}/alignments/{query_name}/minced/{query_name}_vs_{db_prefix}_array.fasta",
+			run=config["run"],query_name=config["query_name"], db_prefix=config['db_prefix'])
 
 # noinspection SmkAvoidTabWhitespace
 rule dali_import:
@@ -243,23 +246,52 @@ Writes single column hit results on: {output.mmseqs_search_result}
 		"""
 
 # noinspection SmkAvoidTabWhitespace
-# TODO: Modify this script to work on argparse or sys.arg + invoke conda on shell
-rule retrieve_hits_fasta:
+rule retrieve_genomic_context:
 	input:
 		mmseqs_search_result = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_result-mms_hits.tsv"
 	output:
-		hits_fasta = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_query_hits.fasta",
+		fasta_region = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_hit_region.fasta",
 		retrieval_report = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_summary_report.csv"
 	params:
 		window_size = config["window_size"],
 		col_names = "hit_id",
 		parent_dir = "{run}/alignments/{query_name}/mmseqs/results/gbk"
-	conda:
-		"envs/biopympi.yaml"
-	script:
-		"py/gather_fasta_entrez.py"
+	message:
+		"""
+Recover genomic regions from MMSEQS2 hits:\n {input.mmseqs_search_result}
+Use window size: {params.window_size}
+Export regions in FASTA format:\n {output.fasta_region}
+		"""
+	shell:
+		"""
+		module load CBI miniforge3/24.3.0-0 || True		
+		eval "$(conda shell.bash hook)"
+		conda activate blast2region
+		python ../py/gather_fasta_entrez.py \
+		{input.mmseqs_search_result} \
+		{output.retrieval_report} \
+		{output.fasta_region} \
+		{params.col_names} \
+		{params.parent_dir} \
+		{params.window_size}
+		"""
 
 # noinspection SmkAvoidTabWhitespace
-# TODO: Use mince here -> conda env already created on Wynton
 rule call_crispr_regions:
 	input:
+		fasta_region = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_{db_prefix}_hit_region.fasta",
+	output:
+		crispr_array = "{run}/alignments/{query_name}/minced/{query_name}_vs_{db_prefix}_array.fasta",
+		crispr_gff = "{run}/alignments/{query_name}/minced/{query_name}_vs_{db_prefix}_array.gff"
+	message:
+		"""
+Predict CRISPR regions from genomic regions:\n {input.fasta_region}
+Export predictions to:\n {output.crispr_array}\n {output.crispr_gff}
+		"""
+	shell:
+		"""
+		module load CBI miniforge3/24.3.0-0 || True		
+		eval "$(conda shell.bash hook)"
+		conda activate minced
+		minced {input.fasta_region} {output.crispr_array} {output.crispr_gff}
+		"""
