@@ -4,5 +4,6 @@ channels:
   - bioconda
 dependencies:
   - biopython
+  - pandas
   - pyyaml
   - bioservices
