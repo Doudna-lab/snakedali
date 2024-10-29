@@ -1,4 +1,5 @@
 # Native modules
+import datetime
 import re
 import time
 import copy
@@ -15,8 +16,8 @@ from Bio.Blast import NCBIXML
 from bioservices import UniProt
 
 
-# DEBUG INPUTS
-# mmseqs_search_path = "/Users/bellieny/projects/snakedali/dump/toy_mmseq_result.tsv"
+# # DEBUG INPUTS
+# mmseqs_search_path = "/Users/bellieny/projects/snakedali/dump/toy_3800_vs_mmseqsDB_result-mms_hits.tsv"
 #
 # col_names = 'hit_id'
 # window_size = 2000
@@ -63,32 +64,67 @@ def ncbi_fetch(acc_list, ncbi_db, file_format):
 	return record_list
 
 
-def ukb2ncbi(uid):
-	u = UniProt(verbose=False)
-	# gbk_id = u.mapping("UniProtKB_AC-ID", "EMBL-GenBank-DDBJ", query=uid, polling_interval_seconds=3, max_waiting_time=100)["results"][0]["to"]
-	try:
-		prot_id = u.mapping("UniProtKB_AC-ID", "EMBL-GenBank-DDBJ_CDS", query=uid, polling_interval_seconds=3, max_waiting_time=100)["results"][0]["to"]
-	except TypeError:
-		prot_id = ''
-	return prot_id
+# def ukb2ncbi(uid):
+# 	u = UniProt(verbose=False)
+# 	# gbk_id = u.mapping("UniProtKB_AC-ID", "EMBL-GenBank-DDBJ", query=uid, polling_interval_seconds=3, max_waiting_time=100)["results"][0]["to"]
+# 	try:
+# 		prot_id = u.mapping("UniProtKB_AC-ID", "EMBL-GenBank-DDBJ_CDS", query=uid, polling_interval_seconds=3, max_waiting_time=100)["results"][0]["to"]
+# 	except (TypeError, IndexError):
+# 		prot_id = ''
+# 	return prot_id
 
 
-def elink_routine(db, hit_uid):
+# def elink_routine(db, hit_uid):
+# 	dup_check = []
+# 	not_found = ""
+# 	linked = ""
+# 	link_record = ""
+# 	server_attempts = 0
+# 	try:
+# 		handle = Entrez.elink(dbfrom="protein", db=db, id=f"{hit_uid}")
+# 	except urllib.error.HTTPError as err:
+# 		if err.code == 500:
+# 			print(f'An internal server error occurred while handling the accession {hit_uid}')
+# 			not_found = hit_uid
+# 			return linked, hit_uid, not_found
+# 	try:
+# 		link_record = Entrez.read(handle)
+# 	except RuntimeError:
+# 		not_found = hit_uid
+# 	if link_record:
+# 		try:
+# 			linked = link_record[0]['LinkSetDb'][0]['Link'][0]['Id']
+# 			if linked not in dup_check:
+# 				dup_check.append(linked)
+# 		except (IndexError, KeyError):
+# 			not_found = hit_uid
+# 	handle.close()
+# 	return linked, hit_uid, not_found
+
+
+def elink_routine(db, dbfrom, hit_uid):
 	dup_check = []
 	not_found = ""
 	linked = ""
 	link_record = ""
-	server_attempts = 0
-	try:
-		handle = Entrez.elink(dbfrom="protein", db=db, id=f"{hit_uid}")
-	except urllib.error.HTTPError as err:
-		if err.code == 500:
+	max_retries = 20
+	handle = ""
+	for _ in range(max_retries):
+		try:
+			handle = Entrez.elink(dbfrom=f"{dbfrom}", db=db, id=f"{hit_uid}")
+		except urllib.error.HTTPError as err:
+			if err.code == 500:
+				print(f'An internal server error occurred while handling the accession {hit_uid}')
+				not_found = hit_uid
+				return linked, hit_uid, not_found
+		except urllib.error.URLError:
 			print(f'An internal server error occurred while handling the accession {hit_uid}')
-			not_found = hit_uid
-			return linked, hit_uid, not_found
+			print(f"Received HTTP 403 error. Retrying in 5 seconds...")
+			time.sleep(5)
+			continue
 	try:
 		link_record = Entrez.read(handle)
-	except RuntimeError:
+	except (RuntimeError, AttributeError, ValueError, FileNotFoundError):
 		not_found = hit_uid
 	if link_record:
 		try:
@@ -97,52 +133,127 @@ def elink_routine(db, hit_uid):
 				dup_check.append(linked)
 		except (IndexError, KeyError):
 			not_found = hit_uid
-	handle.close()
-	return linked, hit_uid, not_found
+	try:
+		handle.close()
+	except AttributeError:
+		pass
+	return linked, link_record, not_found
+
+# def ptn_to_nuc(hit_list: list, db_list):
+# 	progress = 0
+# 	threshold_progress_report = 20
+# 	threshold_progress_step = 20
+# 	nucleotide_uid_list = []
+# 	source2target = {}
+# 	not_found_list = []
+# 	dup_check = []
+# 	current_time = datetime.datetime.now()
+# 	print(f"[{current_time}] --> GATHER NUCLEOTIDE ID FOR HITS. PROGRESS:")
+# 	# Loop through MMSEQShits
+# 	for hit in hit_list:
+# 		progress += 1
+# 		if progress == threshold_progress_report:
+# 			current_time = datetime.datetime.now()
+# 			print(f"[{current_time}] FINISHED {progress} ENTRIES OUT OF {len(hit_list)}")
+# 			threshold_progress_report += threshold_progress_step
+# 		# Standardize protein identifiers to NCBI UIDs through ESearch
+# 		handle = Entrez.esearch(db="protein", term=f"{hit}", idtype="acc")
+# 		current_time = datetime.datetime.now()
+# 		print(f"[{current_time}] --> SUCCESS IN PERFOMING ESEARCH ON HIT {hit} -- "
+# 			  f"NOW READ HANDLE")
+# 		search_record = Entrez.read(handle)
+# 		try:
+# 			uid = search_record['IdList'][0]
+# 		except IndexError:
+# 			continue
+# 		handle.close()
+#
+# 		# Loop through databases (found in config) and grab Nuccore UIDs
+# 		for db_name in db_list:
+# 			if uid in set(dup_check):
+# 				continue
+# 			loop_nuc_gi, loop_nuc_acc, not_found_hit = elink_routine(db_name, uid)
+# 			if not_found_hit:
+# 				not_found_list.append(not_found_hit)
+# 				continue
+# 			if loop_nuc_gi:
+# 				dup_check.append(uid)
+# 				source2target.setdefault(loop_nuc_gi, (loop_nuc_acc, hit))
+# 				nucleotide_uid_list.append(loop_nuc_gi)
+#
+# 	# Ouputs nuccore uids and the ptn->nuc uid links
+# 	return nucleotide_uid_list, source2target, list(set(not_found_list))
 
 
-def ptn_to_nuc(hit_list: list, db_list):
+def ptn_to_nuc(id_list, db_name_list):
 	progress = 0
 	nucleotide_uid_list = []
 	source2target = {}
 	not_found_list = []
-	dup_check = []
-	# Loop through MMSEQShits
-	for hit in hit_list:
+
+	for seq_id in id_list:
 		progress += 1
+		max_retries = 20
+		search_record = {}
 		# Standardize protein identifiers to NCBI UIDs through ESearch
-		handle = Entrez.esearch(db="protein", term=f"{hit}", idtype="acc")
-		search_record = Entrez.read(handle)
+		# Introduce a delay of 1 second before making the request
+		# Attempt the search with retries
+		for _ in range(max_retries):
+			try:
+				handle = Entrez.esearch(db="protein", term=f"{seq_id}", idtype="acc")
+				search_record = Entrez.read(handle)
+				handle.close()
+				break  # Break the loop if successful
+			except urllib.error.HTTPError as e:
+				if e.code == 429:  # HTTP 429: Too Many Requests
+					print(f"Received HTTP 429 error. Retrying in 10 seconds...")
+					time.sleep(10)
+				else:
+					continue  # Re-raise other HTTP errors
+			except RuntimeError:
+				continue
+			except urllib.error.URLError:
+				print(f'An internal server error occurred while handling the accession {hit_uid}')
+				print(f"Received HTTP 403 error. Retrying in 5 seconds...")
+				time.sleep(5)
+				continue
 		try:
 			uid = search_record['IdList'][0]
-		except IndexError:
+		except (IndexError, AttributeError, KeyError):
+			print(f"Entrez.esearch could not find results for {seq_id} on NCBI")
+			not_found_list.append(seq_id)
 			continue
-		handle.close()
-
-		# Loop through databases (found in config) and grab Nuccore UIDs
-		for db_name in db_list:
-			if uid in set(dup_check):
-				continue
-			loop_nuc_gi, loop_nuc_acc, not_found_hit = elink_routine(db_name, uid)
+		# Grab Nuccore UIDs from the source database
+		for db_name in db_name_list:
+			loop_nuc_gi, loop_nuc_acc, not_found_hit = elink_routine(db_name, 'protein', uid)
 			if not_found_hit:
-				loop_nuc_gi, loop_nuc_acc, c_not_found_hit = elink_routine(db_name,
-																		   ukb2ncbi(not_found_hit))
-				if not loop_nuc_gi:
-					not_found_list.append(c_not_found_hit)
-					continue
+				not_found_list.append(not_found_hit)
+				continue
 			if loop_nuc_gi:
-				dup_check.append(uid)
-				source2target.setdefault(loop_nuc_gi, (loop_nuc_acc, hit))
+				source2target.setdefault(loop_nuc_gi, seq_id)
 				nucleotide_uid_list.append(loop_nuc_gi)
+				print(f"Nuccore GI and ptn accession: {loop_nuc_gi} {seq_id}")
+				break
 
 	# Ouputs nuccore uids and the ptn->nuc uid links
+	print(f"Total n of not found hits: {len(not_found_list)}")
 	return nucleotide_uid_list, source2target, list(set(not_found_list))
 
 
 def nuc_to_gb(uid_list):
+	progress = 0
+	threshold_progress_report = 20
+	threshold_progress_step = 20
 	# Get Genbank records for each Nuccore UID
 	gb_records = {}
+	current_time = datetime.datetime.now()
+	print(f"[{current_time}] --> GATHER REGIONS FOR HITS. PROGRESS:")
 	for uid in uid_list:
+		progress += 1
+		if progress == threshold_progress_report:
+			current_time = datetime.datetime.now()
+			print(f"[{current_time}] FINISHED {progress} ENTRIES OUT OF {len(uid_list)}")
+			threshold_progress_report += threshold_progress_step
 		handle = Entrez.efetch(db="nucleotide", id=f"{uid}", rettype="gb", retmode="text")
 		record = SeqIO.read(handle, "genbank")
 		gb_records.setdefault(uid, record)
@@ -153,6 +264,8 @@ def nuc_to_gb(uid_list):
 def gb_plier(query_to_gb_dict, uid_to_acc, win_size):
 	gbk_target = {}
 	prot_dict = {}
+	current_time = datetime.datetime.now()
+	print(f"[{current_time}] --> COMPILE GENOMIC REGIONS IN GENBANK FILES")
 	for hit_uid in query_to_gb_dict:
 		gbk = query_to_gb_dict[hit_uid]
 		for seq_feature in gbk.features:
@@ -202,7 +315,8 @@ def gb_plier(query_to_gb_dict, uid_to_acc, win_size):
 									  }
 					prot_dict.setdefault(uid_to_acc[hit_uid][1], prep_prot_dict)
 					gbk_target.setdefault(f"{gbk.id}_{start}-{end}", gbk_focused)
-
+	current_time = datetime.datetime.now()
+	print(f"[{current_time}] --> GENOMIC REGIONS SUCCESSFULLY COMPILED IN GENBANK FILES")
 	return gbk_target, prot_dict
 
 
@@ -280,30 +394,36 @@ def main():
 	blast_df = pd.read_csv(mmseqs_search_path,
 	                       names=col_names_list,
 	                       index_col=False).convert_dtypes().infer_objects()
+
 	# Process pd Dataframe and take the unique set of hit IDs
 	unique_mms_hits = list(set(blast_df[col_names].dropna().tolist()))
 
 	# Query NCBI to get nuccore UIDs associated with the protein hits using ESearch/ELink
-	print("Linking protein hit ids to Nuccore entries")
+	current_time = datetime.datetime.now()
+	print(f"[{current_time}] --> Linking protein hit ids to Nuccore entries")
 	nuc_uid_per_query, hit_to_link, hits_not_found = ptn_to_nuc(unique_mms_hits, efecth_db_list)
 
 	# Get GenBank entries through EFetch
-	print("Retrieving GenBank objects")
+	current_time = datetime.datetime.now()
+	print(f"[{current_time}] --> Retrieving GenBank objects")
 	gb_seqrec_per_query = nuc_to_gb(nuc_uid_per_query)
 
 	# Narrow down Genbank files based on hit UIDs
-	print("Extracting relevant features from GenBank objects")
+	current_time = datetime.datetime.now()
+	print(f"[{current_time}] --> Extracting relevant features from GenBank objects")
 	targeg_gb_dict, target_hit_dict = gb_plier(gb_seqrec_per_query, hit_to_link, window_size)
 
 	# Parse hit sequences to FASTA file
 	hit_seq_record_list = ncbi_fetch(unique_mms_hits, 'protein', 'fasta')
 
 	# Generate summary dataframe
-	print("Generate reports")
+	current_time = datetime.datetime.now()
+	print(f"[{current_time}] --> GENERATE REPORTS")
 	df = pd.DataFrame.from_dict(target_hit_dict, orient='index')
 
 	# Export outputs
-	print("Export files")
+	current_time = datetime.datetime.now()
+	print(f"[{current_time}] --> EXPORT FILES")
 	export_gbs(targeg_gb_dict, parent_dir)
 	df.to_csv(retrieval_report, index=False)
 
