@@ -36,6 +36,12 @@ rule all:
 		# Expand list of sequence hits by running MMSEQS2 against different databases
 		expand("{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_result-mms_hits.tsv",
 			run=config["run"],query_name=config["query_name"]),
+		# Recover FASTA-formatted sequences of the MMSEQS2 hits
+		expand("{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_result-mms_hits.fasta",
+			run=config["run"],query_name=config["query_name"]),
+		# Run MMESEQS2 clustering to reduce the initial number of hits to Representative sequences only
+		expand("{run}/alignments/{query_name}/mmseqs/results/{query_name}_clustered_rep_seq.fasta",
+			run=config["run"],query_name=config["query_name"]),
 		# Recover genomic context from hits found through MMSEQS2
 		expand("{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_hit_region.fasta",
 			run=config["run"],query_name=config["query_name"]),
@@ -250,9 +256,62 @@ Writes single column hit results on: {output.mmseqs_search_result}
 		"""
 
 # noinspection SmkAvoidTabWhitespace
+rule gather_hit_sequences:
+	input:
+		mmseqs_search_result = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_result-mms_hits.tsv",
+	output:
+		mmseqs_hits_fasta = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_result-mms_hits.fasta",
+	params:
+		mmseqs_fasta_db = lambda wildcards: glob.glob("{mmseqs_db}.faa".format(mmseqs_db=config["mmseqs_db_path"])),
+		tmpdir = config['tmpdir'],
+	message:
+		"""
+Recover FASTA-formatted sequences from mmseqs search hits:
+{input.mmseqs_search_result}
+Use the mmseqs database reference:
+{params.mmseqs_fasta_db}
+Output hits FASTA to:
+{output.mmseqs_hits_fasta}			
+		"""
+	shell:
+		"""
+		module load CBI miniforge3/24.3.0-0 || True
+		eval "$(conda shell.bash hook)"
+		conda activate seqtk
+		mkdir -p {params.tmpdir}/{wildcards.query_name}/mmseqs_gather
+		cd {params.tmpdir}/{wildcards.query_name}/mmseqs_gather
+		seqtk subseq {params.mmseqs_fasta_db} {input.mmseqs_search_result} > tmp_hits.fasta 
+		mv tmp_hits.fasta {output.mmseqs_hits_fasta}
+		"""
+
+# noinspection SmkAvoidTabWhitespace
+rule cluster_hits:
+	input:
+		mmseqs_hits_fasta = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_result-mms_hits.fasta",
+	output:
+		cluster_representatives = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_clustered_rep_seq.fasta"
+	params:
+		tmpdir = config['tmpdir'],
+		output_directory = "{run}/alignments/{query_name}/mmseqs/results",
+	conda:
+		'envs/mmseqs.yaml'
+	threads:
+		config["threads"]
+	shell:
+		"""
+		module load CBI miniforge3/24.3.0-0 || True
+		eval "$(conda shell.bash hook)"
+		conda activate mmseqs
+		mkdir -p {params.tmpdir}/{wildcards.query_name}/mmseqs_cluster
+		cd {params.tmpdir}/{wildcards.query_name}/mmseqs_cluster
+		mmseqs easy-linclust {input.mmseqs_hits_fasta} {wildcards.query_name}_clustered tmp --cluster-mode 1 --threads {threads}
+		mv {wildcards.query_name}_clustered* {params.output_directory}
+		"""
+
+# noinspection SmkAvoidTabWhitespace
 rule retrieve_genomic_context:
 	input:
-		mmseqs_search_result = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_result-mms_hits.tsv"
+		cluster_representatives = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_clustered_rep_seq.fasta"
 	output:
 		fasta_region = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_hit_region.fasta",
 		retrieval_report = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_summary_report.csv"
@@ -263,7 +322,7 @@ rule retrieve_genomic_context:
 	localrule: True
 	message:
 		"""
-Recover genomic regions from MMSEQS2 hits:\n {input.mmseqs_search_result}
+Recover genomic regions from MMSEQS2 hits:\n {input.cluster_representatives}
 Use window size: {params.window_size}
 Export regions in FASTA format:\n {output.fasta_region}
 		"""
@@ -272,13 +331,15 @@ Export regions in FASTA format:\n {output.fasta_region}
 		module load CBI miniforge3/24.3.0-0 || True		
 		eval "$(conda shell.bash hook)"
 		conda activate blast2region
+		grep ">" {input.cluster_representatives} | cut -d ' ' -f 1 | cut -d '>' -f 2 > tmp_{wildcards.query_name}_ids.tsv
 		python ../py/gather_fasta_entrez.py \
-		{input.mmseqs_search_result} \
+		tmp_{wildcards.query_name}_ids.tsv \
 		{output.retrieval_report} \
 		{output.fasta_region} \
 		{params.col_names} \
 		{params.parent_dir} \
 		{params.window_size}
+		rm tmp_{wildcards.query_name}_ids.tsv
 		"""
 
 # noinspection SmkAvoidTabWhitespace

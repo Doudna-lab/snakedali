@@ -5,6 +5,8 @@ import time
 import copy
 import os
 import sys
+import http.client
+import socket
 # Installed modules
 import urllib.request
 import urllib.error
@@ -35,7 +37,6 @@ def ncbi_fetch(acc_list, ncbi_db, file_format):
 	record_list = []
 	max_retries = 50
 	for acc in acc_list:
-
 		# Attempt the search with retries
 		for _ in range(max_retries):
 			try:
@@ -120,6 +121,21 @@ def elink_routine(db, dbfrom, hit_uid):
 		except urllib.error.URLError:
 			print(f'An internal server error occurred while handling the accession {hit_uid}')
 			print(f"Received HTTP 403 error. Retrying in 5 seconds...")
+			time.sleep(5)
+			continue
+		except http.client.IncompleteRead as e:
+			print(f'An internal server error occurred while handling the accession {hit_uid}:\n {e}')
+			print(f"Received HTTPException error. Retrying in 5 seconds...")
+			time.sleep(5)
+			continue
+		except socket.timeout as e:
+			print(f'An internal server error occurred while handling the accession {hit_uid}:\n {e}')
+			print(f"Received socket.timeout error. Retrying in 5 seconds...")
+			time.sleep(5)
+			continue
+		except http.client.HTTPException as e:
+			print(f'An internal server error occurred while handling the accession {hit_uid}:\n {e}')
+			print(f"Received HTTPException error. Retrying in 5 seconds...")
 			time.sleep(5)
 			continue
 	try:
@@ -213,8 +229,23 @@ def ptn_to_nuc(id_list, db_name_list):
 			except RuntimeError:
 				continue
 			except urllib.error.URLError:
-				print(f'An internal server error occurred while handling the accession {hit_uid}')
+				print(f'An internal server error occurred while handling the accession {seq_id}')
 				print(f"Received HTTP 403 error. Retrying in 5 seconds...")
+				time.sleep(5)
+				continue
+			except http.client.IncompleteRead as e:
+				print(f'An internal server error occurred while handling the accession {seq_id}:\n {e}')
+				print(f"Received HTTPException error. Retrying in 5 seconds...")
+				time.sleep(5)
+				continue
+			except socket.timeout as e:
+				print(f'An internal server error occurred while handling the accession {seq_id}:\n {e}')
+				print(f"Received socket.timeout error. Retrying in 5 seconds...")
+				time.sleep(5)
+				continue
+			except http.client.HTTPException as e:
+				print(f'An internal server error occurred while handling the accession {seq_id}:\n {e}')
+				print(f"Received HTTPException error. Retrying in 5 seconds...")
 				time.sleep(5)
 				continue
 		try:
