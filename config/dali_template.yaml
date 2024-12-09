@@ -48,8 +48,11 @@ tcoffee_2nd_params: "-aln |input| -output fasta_aln -matrix=blosum30mt -usetree=
 # DO NOT CHANGE: Apptainer/Singularity Container Path
 singularity_path: "apptainer_sif/import_container.sif"
 
-# According to the 'cluster' variable in: profile/config.yaml
+# According to the 'cluster' variable in: profile_sge/config.yaml
 threads: 10
+
+# Number of ranks to distribute MPI process
+mpi_ranks: 30
 
 # DO NOT CHANGE: Filename prefix for individual lists of entry IDs
 dat_id_list_prefix: "list_batch_"
