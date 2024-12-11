@@ -82,7 +82,12 @@ def ncbi_fetch(fasta_recs_dict, coord_dict, ncbi_db, file_format, rank):
 
 
 def ipg_routine(db, hit_uid):
+	link_accession = None
+	link_coords = None
+
 	def ipg_handler():
+		nucleotide_accession = False
+		coords = False
 		# Fetch the IPG table for the given protein ID
 		handle = Entrez.efetch(db=f"{db}", id=f"{hit_uid}", rettype="ipg", retmode="text")
 		ipg_data = handle.read().decode('utf-8')  # Decode the bytes data
@@ -100,9 +105,12 @@ def ipg_routine(db, hit_uid):
 					return nucleotide_accession, coords
 				except ValueError:
 					continue
-		return None, None
+		return nucleotide_accession, coords
 
-	(link_accession, link_coords) = handle_api_errors(ipg_handler)
+	try:
+		link_accession, link_coords = handle_api_errors(ipg_handler)
+	except TypeError:
+		pass
 
 	return link_accession, link_coords
 
@@ -119,8 +127,12 @@ def handle_api_errors(func, retries=20, delay=1):
 			elif e.code == 500:
 				print(f"Received HTTP 500 error. Retrying in {delay} seconds...")
 				time.sleep(delay)
+			elif e.code == 502:
+				print(f"Received HTTP 502 error. Retrying in {delay} seconds...")
+				time.sleep(delay)
 			else:
-				raise
+				print(f"Unhandled HTTP error: {e.code}. Retrying in {delay} seconds")
+				time.sleep(delay)
 		except (urllib.error.URLError, RuntimeError, http.client.IncompleteRead, socket.timeout, http.client.HTTPException) as e:
 			print(f"API error occurred: {e}. Retrying in {delay} seconds...")
 			time.sleep(delay)
@@ -209,7 +221,12 @@ def gb_plier(query_to_gb_dict, query_to_fasta_dict, nuc_coords_dict, uid_to_acc,
 	highlight_feature = None
 	for hit_uid in query_to_gb_dict:
 		gbk = query_to_gb_dict[hit_uid]
-		for seq_feature in gbk.features:
+		try:
+			gbk_features = gbk.features
+		except AttributeError:
+			logging.warning(f"No GenBank features found for {hit_uid}")
+			continue
+		for seq_feature in gbk_features:
 			# Avoid blank feature that may occur in GenBank entries
 			try:
 				qualifiers = seq_feature.qualifiers
@@ -226,7 +243,10 @@ def gb_plier(query_to_gb_dict, query_to_fasta_dict, nuc_coords_dict, uid_to_acc,
 					f_start = seq_feature.location.start.real
 					f_end = seq_feature.location.end.real
 					f_strand = seq_feature.location.strand
-					f_seq = qualifiers["translation"][0]
+					try:
+						f_seq = qualifiers["translation"][0]
+					except KeyError:
+						f_seq = ''
 					f_len = len(f_seq)
 					# Set start/end coords using window size
 					start_coord = max(int(min([f_start, f_end])) - win_size, 0)
@@ -252,8 +272,8 @@ def gb_plier(query_to_gb_dict, query_to_fasta_dict, nuc_coords_dict, uid_to_acc,
 				end_coord = min(int(max([f_start, f_end])) + win_size + 1, len(gbk.seq))
 
 		# Process FASTA record
+		region_record = query_to_fasta_dict[hit_uid]
 		try:
-			region_record = query_to_fasta_dict[hit_uid]
 			region_sequence = region_record.seq[start_coord:end_coord]
 		except AttributeError:
 			logging.debug(f"WARNING: Could not find sequence for {hit_uid}. Skipping")

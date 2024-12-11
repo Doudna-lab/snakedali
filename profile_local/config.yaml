@@ -1,0 +1,33 @@
+latency-wait: 120
+reason: True
+#use-conda: True
+rerun-incomplete: True
+show-failed-logs: True
+keep-going: True
+printshellcmds: True
+# Cluster submission
+#jobname: "testrun.{jobid}"              # Provide a custom name for the jobscript that is submitted to the cluster.
+jobs: 12                              #Use at most N CPU cluster/cloud jobs in parallel.
+
+rerun-triggers: 'mtime'
+
+#cluster: "sbatch -t {cluster.time}"
+#cluster-config: "config/cluster.yaml"
+
+# Working Directory
+directory: "snake_log"
+
+# singularity
+#use-singularity: True
+#singularity-args: "-B tmp"
+
+# Job resources
+#set-resources:
+#  - helloSingularity:mem_mb=1000
+#  - helloSingularity:runtime=00:03:00
+#default-resources:
+#  - mem_mb=500
+#  - runtime="00:01:00"
+# Define the number of threads used by rules
+#set-threads:
+#  - helloSingularity=1

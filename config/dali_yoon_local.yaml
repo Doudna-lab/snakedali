@@ -1,0 +1,71 @@
+# === Directory- and File Paths
+# Path to parent directory where query and database are stored
+run: "/Users/bellieny/projects/yoon_ph/type3_run"
+
+# "/scratch/bellieny-rabelo/nidali_output"
+# "/Users/bellieny/projects/yoon_ph/nidali_smk_output"
+#   Consult the README.md and download it from snakedali's aws bucket
+db_dir: "/Users/bellieny/projects/yoon_ph/pdb_files_DAT"
+
+# MMSEQS Database(s) path
+mmseqs_db_path: "/Users/bellieny/projects/mmseqs_db/mmseqsDB_refseq-bav"
+
+# AFDB Fasta file path
+#   This file can be downloaded from AFDB's FTP page: https://ftp.ebi.ac.uk/pub/databases/alphafold/
+#   Add the path where it's been downloaded
+afdb_pkl: "/groups/doudna/team_resources/shared_databases/afdb/pkl/sequences.pkl"
+
+#   The <fseek_clustered_afdb_representatives.txt> is a pre-built file that must be downloaded prior to Snakedali execution
+#   Consult the README.md and download it from snakedali's aws bucket
+fseek_clustered_representatives: "/groups/doudna/team_resources/shared_databases/afdb/fseek_clusters/fseek_clustered_afdb_representatives.txt"
+
+# Database(s) prefix(es)
+#   Each item in the list represents the prefix used to build each of the mmseqs databases
+#db_prefix: ['mmseqsDB_refseq-bav']
+
+input_dir: "/Users/bellieny/projects/yoon_ph/type3_query"
+
+# Window Size
+window_size: 10000
+
+# MMSEQS2 n of iterations
+mms_n_iterations: 2
+
+# Commonly a temporary directory where intermediate files are generated and purged
+#   Set up this environment variable prior to Snakedali execution
+tmpdir: '$TMPDIR'
+
+# Path to Dali's binary folder
+dali_path: "/shared/software/bin"
+
+# Path to T-COFFEE binary
+tcoffee_bin: "/wynton/home/doudna/bellieny-rabelo/.t_coffee/bin/linux/t_coffee"
+tcoffee_1st_params: "-aln |input| -output fasta_aln -matrix=blosum30mt"
+tcoffee_2nd_params: "-aln |input| -output fasta_aln -matrix=blosum30mt -usetree= |tree|"
+
+#Apptainer/Singularity Container Path
+singularity_path: "../apptainer_sif/import_container.sif"
+
+# According to the 'cluster' variable in: profile_sge/config.yaml
+threads: 10
+
+# Number of ranks to distribute MPI process
+mpi_ranks: 30
+
+# Filename prefix for individual lists of entry IDs
+dat_id_list_prefix: "list_batch_"
+
+# Alphafold ID conversion table
+id_convert: "/Users/bellieny/projects/snakedali/support_data/clustered_AFDB_structure_key.txt"
+
+# === Run-associated variables
+# DO NOT CHANGE: Apptainer/Singularity Container Path
+query_name: ["6fjw", "6ifb", "6ife", "6ifh"]
+# === Run-associated variables
+# Range of batches within the database to be processed
+batch_range: [0,2302]
+
+#6fjwA.pdb 6fjw.pdb
+#6ifnB.pdb 6ifb.pdb
+#6ifnE.pdb 6ife.pdb
+#6ifnH.pdb 6ifh.pdb

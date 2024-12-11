@@ -1,0 +1,71 @@
+# === Directory- and File Paths
+# Path to parent directory where query and database are stored
+run: "/wynton/home/doudna/bellieny-rabelo/nidali_output/yoon_p"
+
+# "/scratch/bellieny-rabelo/nidali_output"
+# "/groups/doudna/projects/daniel_projects/yoon_ph/nidali_smk_output"
+#   Consult the README.md and download it from snakedali's aws bucket
+db_dir: "/wynton/home/doudna/bellieny-rabelo/nidali_db"
+
+# MMSEQS Database(s) path
+mmseqs_db_path: "/wynton/group/doudna/mmseqs_db/formatted_refseq-bav/mmseqsDB_refseq-bav"
+
+# AFDB Fasta file path
+#   This file can be downloaded from AFDB's FTP page: https://ftp.ebi.ac.uk/pub/databases/alphafold/
+#   Add the path where it's been downloaded
+afdb_pkl: "/wynton/home/doudna/shared/afdb_fasta/sequences.pkl"
+
+#   The <fseek_clustered_afdb_representatives.txt> is a pre-built file that must be downloaded prior to Snakedali execution
+#   Consult the README.md and download it from snakedali's aws bucket
+fseek_clustered_representatives: "/wynton/home/doudna/bellieny-rabelo/nidali_db/fseek_clusters/fseek_clustered_afdb_representatives.txt"
+
+# Database(s) prefix(es)
+#   Each item in the list represents the prefix used to build each of the mmseqs databases
+#db_prefix: ['mmseqsDB_refseq-bav']
+
+input_dir: "/wynton/home/doudna/bellieny-rabelo/nidali_queries/yoon_p"
+
+# Window Size
+window_size: 10000
+
+# MMSEQS2 n of iterations
+mms_n_iterations: 2
+
+# Commonly a temporary directory where intermediate files are generated and purged
+#   Set up this environment variable prior to Snakedali execution
+tmpdir: '$TMPDIR'
+
+# Path to Dali's binary folder
+dali_path: "/wynton/home/doudna/bellieny-rabelo/projects/dali_install/DaliLite.v5/bin"
+
+# Path to T-COFFEE binary
+tcoffee_bin: "/wynton/home/doudna/bellieny-rabelo/.t_coffee/bin/linux/t_coffee"
+tcoffee_1st_params: "-aln |input| -output fasta_aln -matrix=blosum30mt"
+tcoffee_2nd_params: "-aln |input| -output fasta_aln -matrix=blosum30mt -usetree= |tree|"
+
+#Apptainer/Singularity Container Path
+singularity_path: "../apptainer_sif/import_container.sif"
+
+# According to the 'cluster' variable in: profile_sge/config.yaml
+threads: 10
+
+# Number of ranks to distribute MPI process
+mpi_ranks: 30
+
+# Filename prefix for individual lists of entry IDs
+dat_id_list_prefix: "list_batch_"
+
+# Alphafold ID conversion table
+id_convert: "/wynton/home/doudna/bellieny-rabelo/projects/nidali/dump/clustered_AFDB_structure_key.txt"
+
+# === Run-associated variables
+# DO NOT CHANGE: Apptainer/Singularity Container Path
+query_name: ["6fjw", "6ifb", "6ife", "6ifh"]
+# === Run-associated variables
+# Range of batches within the database to be processed
+batch_range: [0,2302]
+
+#6fjwA.pdb 6fjw.pdb
+#6ifnB.pdb 6ifb.pdb
+#6ifnE.pdb 6ife.pdb
+#6ifnH.pdb 6ifh.pdb
