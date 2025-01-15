@@ -7,6 +7,7 @@ import os
 import sys
 import http.client
 import socket
+import logging
 # Installed modules
 import urllib.request
 import urllib.error
@@ -46,8 +47,8 @@ def ncbi_fetch(acc_list, ncbi_db, file_format):
 				break  # Break the loop if successful
 			except urllib.error.HTTPError as e:
 				if e.code == 429:  # HTTP 429: Too Many Requests
-					print(f"Received HTTP 429 error. Retrying in 10 seconds...")
-					time.sleep(10)
+					print(f"Received HTTP 429 error. Retrying in 5 seconds...")
+					time.sleep(5)
 				else:
 					continue  # Re-raise other HTTP errors
 			except urllib.error.URLError:
@@ -105,18 +106,18 @@ def ncbi_fetch(acc_list, ncbi_db, file_format):
 
 def elink_routine(db, dbfrom, hit_uid):
 	dup_check = []
-	not_found = ""
+	not_found = None
 	linked = ""
 	link_record = ""
 	max_retries = 20
 	handle = ""
 	for _ in range(max_retries):
 		try:
-			handle = Entrez.elink(dbfrom=f"{dbfrom}", db=db, id=f"{hit_uid}")
+			handle = Entrez.elink(dbfrom=f"{dbfrom}", rettype='ipg', db=db, id=f"{hit_uid}")
 		except urllib.error.HTTPError as err:
 			if err.code == 500:
 				print(f'An internal server error occurred while handling the accession {hit_uid}')
-				not_found = hit_uid
+				# not_found = hit_uid
 				return linked, hit_uid, not_found
 		except urllib.error.URLError:
 			print(f'An internal server error occurred while handling the accession {hit_uid}')
@@ -138,17 +139,46 @@ def elink_routine(db, dbfrom, hit_uid):
 			print(f"Received HTTPException error. Retrying in 5 seconds...")
 			time.sleep(5)
 			continue
-	try:
-		link_record = Entrez.read(handle)
-	except (RuntimeError, AttributeError, ValueError, FileNotFoundError):
-		not_found = hit_uid
+	for _ in range(max_retries):
+		try:
+			link_record = Entrez.read(handle)
+		except (RuntimeError, AttributeError, ValueError, FileNotFoundError):
+			# not_found = hit_uid
+			pass
+		except urllib.error.HTTPError as err:
+			if err.code == 500:
+				print(f'An internal server error occurred while handling the accession {hit_uid}')
+				# not_found = hit_uid
+				return linked, hit_uid, not_found
+		except urllib.error.URLError:
+			print(f'An internal server error occurred while handling the accession {hit_uid}')
+			print(f"Received HTTP 403 error. Retrying in 5 seconds...")
+			time.sleep(5)
+			continue
+		except http.client.IncompleteRead as e:
+			print(f'An internal server error occurred while handling the accession {hit_uid}:\n {e}')
+			print(f"Received HTTPException error. Retrying in 5 seconds...")
+			time.sleep(5)
+			continue
+		except socket.timeout as e:
+			print(f'An internal server error occurred while handling the accession {hit_uid}:\n {e}')
+			print(f"Received socket.timeout error. Retrying in 5 seconds...")
+			time.sleep(5)
+			continue
+		except http.client.HTTPException as e:
+			print(f'An internal server error occurred while handling the accession {hit_uid}:\n {e}')
+			print(f"Received HTTPException error. Retrying in 5 seconds...")
+			time.sleep(5)
+			continue
+
 	if link_record:
 		try:
 			linked = link_record[0]['LinkSetDb'][0]['Link'][0]['Id']
 			if linked not in dup_check:
 				dup_check.append(linked)
 		except (IndexError, KeyError):
-			not_found = hit_uid
+			pass
+
 	try:
 		handle.close()
 	except AttributeError:
@@ -201,73 +231,141 @@ def elink_routine(db, dbfrom, hit_uid):
 # 	return nucleotide_uid_list, source2target, list(set(not_found_list))
 
 
+# def ptn_to_nuc(id_list, db_name_list):
+# 	progress = 0
+# 	nucleotide_uid_list = []
+# 	source2target = {}
+# 	not_found_list = []
+#
+# 	for seq_id in id_list:
+# 		progress += 1
+# 		max_retries = 20
+# 		search_record = {}
+# 		# Standardize protein identifiers to NCBI UIDs through ESearch
+# 		# Introduce a delay of 1 second before making the request
+# 		# Attempt the search with retries
+# 		for _ in range(max_retries):
+# 			try:
+# 				handle = Entrez.esearch(db="protein", term=f"{seq_id}", idtype="acc")
+# 				search_record = Entrez.read(handle)
+# 				handle.close()
+# 				break  # Break the loop if successful
+# 			except urllib.error.HTTPError as e:
+# 				if e.code == 429:  # HTTP 429: Too Many Requests
+# 					print(f"Received HTTP 429 error. Retrying in 10 seconds...")
+# 					time.sleep(10)
+# 				else:
+# 					continue  # Re-raise other HTTP errors
+# 			except RuntimeError:
+# 				continue
+# 			except urllib.error.URLError:
+# 				print(f'An internal server error occurred while handling the accession {seq_id}')
+# 				print(f"Received HTTP 403 error. Retrying in 5 seconds...")
+# 				time.sleep(5)
+# 				# continue
+# 			except http.client.IncompleteRead as e:
+# 				print(f'An internal server error occurred while handling the accession {seq_id}:\n {e}')
+# 				print(f"Received HTTPException error. Retrying in 5 seconds...")
+# 				time.sleep(5)
+# 				# continue
+# 			except socket.timeout as e:
+# 				print(f'An internal server error occurred while handling the accession {seq_id}:\n {e}')
+# 				print(f"Received socket.timeout error. Retrying in 5 seconds...")
+# 				time.sleep(5)
+# 				# continue
+# 			except http.client.HTTPException as e:
+# 				print(f'An internal server error occurred while handling the accession {seq_id}:\n {e}')
+# 				print(f"Received HTTPException error. Retrying in 5 seconds...")
+# 				time.sleep(5)
+# 				# continue
+# 		try:
+# 			uid = search_record['IdList'][0]
+# 		except (IndexError, AttributeError, KeyError):
+# 			print(f"Entrez.esearch could not find results for {seq_id} on NCBI")
+# 			not_found_list.append(seq_id)
+# 			continue
+# 		# Grab Nuccore UIDs from the source database
+# 		for db_name in db_name_list:
+# 			loop_nuc_gi, loop_nuc_acc, not_found_hit = elink_routine(db_name, 'protein', uid)
+# 			if not_found_hit:
+# 				not_found_list.append(not_found_hit)
+# 				continue
+# 			if loop_nuc_gi:
+# 				source2target.setdefault(loop_nuc_gi, seq_id)
+# 				nucleotide_uid_list.append(loop_nuc_gi)
+# 				print(f"Nuccore GI and ptn accession: {loop_nuc_gi} {seq_id}")
+# 				break
+#
+# 	# Ouputs nuccore uids and the ptn->nuc uid links
+# 	print(f"Total n of not found hits: {len(not_found_list)}")
+# 	return nucleotide_uid_list, source2target, list(set(not_found_list))
+
+
+def handle_api_errors(func, retries=20, delay=5):
+	"""Helper function to handle retries for API calls."""
+	for _ in range(retries):
+		try:
+			return func()
+		except urllib.error.HTTPError as e:
+			if e.code == 429:
+				print("Received HTTP 429 error. Retrying in 5 seconds...")
+				time.sleep(5)
+			else:
+				raise
+		except (urllib.error.URLError, RuntimeError, http.client.IncompleteRead, socket.timeout, http.client.HTTPException) as e:
+			print(f"API error occurred: {e}. Retrying in {delay} seconds...")
+			time.sleep(delay)
+	print("Max retries reached. Skipping.")
+	return None
+
+
 def ptn_to_nuc(id_list, db_name_list):
-	progress = 0
 	nucleotide_uid_list = []
 	source2target = {}
 	not_found_list = []
+	report_threshold = 100
+	threshold_step = 100
+	count_processed = 0
 
 	for seq_id in id_list:
-		progress += 1
-		max_retries = 20
-		search_record = {}
+		if count_processed == report_threshold:
+			logging.debug(f"*** Processed {count_processed} entries ***")
+			report_threshold += threshold_step
 		# Standardize protein identifiers to NCBI UIDs through ESearch
-		# Introduce a delay of 1 second before making the request
-		# Attempt the search with retries
-		for _ in range(max_retries):
-			try:
-				handle = Entrez.esearch(db="protein", term=f"{seq_id}", idtype="acc")
-				search_record = Entrez.read(handle)
-				handle.close()
-				break  # Break the loop if successful
-			except urllib.error.HTTPError as e:
-				if e.code == 429:  # HTTP 429: Too Many Requests
-					print(f"Received HTTP 429 error. Retrying in 10 seconds...")
-					time.sleep(10)
-				else:
-					continue  # Re-raise other HTTP errors
-			except RuntimeError:
-				continue
-			except urllib.error.URLError:
-				print(f'An internal server error occurred while handling the accession {seq_id}')
-				print(f"Received HTTP 403 error. Retrying in 5 seconds...")
-				time.sleep(5)
-				continue
-			except http.client.IncompleteRead as e:
-				print(f'An internal server error occurred while handling the accession {seq_id}:\n {e}')
-				print(f"Received HTTPException error. Retrying in 5 seconds...")
-				time.sleep(5)
-				continue
-			except socket.timeout as e:
-				print(f'An internal server error occurred while handling the accession {seq_id}:\n {e}')
-				print(f"Received socket.timeout error. Retrying in 5 seconds...")
-				time.sleep(5)
-				continue
-			except http.client.HTTPException as e:
-				print(f'An internal server error occurred while handling the accession {seq_id}:\n {e}')
-				print(f"Received HTTPException error. Retrying in 5 seconds...")
-				time.sleep(5)
-				continue
-		try:
-			uid = search_record['IdList'][0]
-		except (IndexError, AttributeError, KeyError):
+
+		def search_protein():
+			with Entrez.esearch(db="protein", rettype='ipg', term=f"{seq_id}", idtype="acc") as handle:
+				return Entrez.read(handle)
+
+		search_record = handle_api_errors(search_protein)
+		if not search_record or not search_record.get("IdList"):
+			logging.debug(f"Entrez.esearch could not find results for {seq_id} on NCBI")
 			print(f"Entrez.esearch could not find results for {seq_id} on NCBI")
 			not_found_list.append(seq_id)
 			continue
+
+		uid = search_record["IdList"][0]
+
 		# Grab Nuccore UIDs from the source database
 		for db_name in db_name_list:
-			loop_nuc_gi, loop_nuc_acc, not_found_hit = elink_routine(db_name, 'protein', uid)
-			if not_found_hit:
-				not_found_list.append(not_found_hit)
+			loop_nuc_gi, loop_nuc_acc, not_found_hit = elink_routine(db_name, "protein", uid)
+			if not_found_hit is not None:
+				not_found_list.append(uid)
 				continue
 			if loop_nuc_gi:
-				source2target.setdefault(loop_nuc_gi, seq_id)
+				source2target[loop_nuc_gi] = seq_id
 				nucleotide_uid_list.append(loop_nuc_gi)
-				print(f"Nuccore GI and ptn accession: {loop_nuc_gi} {seq_id}")
+				logging.debug(f"Nuccore GI and protein accession: {loop_nuc_gi} {seq_id}")
+				print(f"Nuccore GI and protein accession: {loop_nuc_gi} {seq_id}")
 				break
 
-	# Ouputs nuccore uids and the ptn->nuc uid links
-	print(f"Total n of not found hits: {len(not_found_list)}")
+		count_processed += 1
+
+	# Outputs nuccore UIDs and the protein->nuc UID links
+	logging.debug(f"Total not found hits: {len(not_found_list)}")
+	logging.debug(f"Size of found: {len(nucleotide_uid_list)}")
+	print(f"Total not found hits: {len(not_found_list)}")
+	print(f"Size of found: {len(nucleotide_uid_list)}")
 	return nucleotide_uid_list, source2target, list(set(not_found_list))
 
 
@@ -278,15 +376,24 @@ def nuc_to_gb(uid_list):
 	# Get Genbank records for each Nuccore UID
 	gb_records = {}
 	current_time = datetime.datetime.now()
+	logging.debug(f"[{current_time}] --> GATHER REGIONS FOR HITS. PROGRESS")
 	print(f"[{current_time}] --> GATHER REGIONS FOR HITS. PROGRESS:")
+
+	def efecth_process():
+		handle = Entrez.efetch(db="nucleotide", id=f"{uid}", rettype="gb", retmode="text")
+		return SeqIO.read(handle, "genbank")
+
 	for uid in uid_list:
 		progress += 1
 		if progress == threshold_progress_report:
 			current_time = datetime.datetime.now()
 			print(f"[{current_time}] FINISHED {progress} ENTRIES OUT OF {len(uid_list)}")
 			threshold_progress_report += threshold_progress_step
-		handle = Entrez.efetch(db="nucleotide", id=f"{uid}", rettype="gb", retmode="text")
-		record = SeqIO.read(handle, "genbank")
+
+		# handle = Entrez.efetch(db="nucleotide", id=f"{uid}", rettype="gb", retmode="text")
+		# record = SeqIO.read(handle, "genbank")
+		record = efecth_process()
+
 		gb_records.setdefault(uid, record)
 	# Returns a list  of Genbank SeqRecords objects
 	return gb_records
@@ -296,6 +403,7 @@ def gb_plier(query_to_gb_dict, uid_to_acc, win_size):
 	gbk_target = {}
 	prot_dict = {}
 	current_time = datetime.datetime.now()
+	logging.debug(f"[{current_time}] --> COMPILE GENOMIC REGIONS IN GENBANK FILES")
 	print(f"[{current_time}] --> COMPILE GENOMIC REGIONS IN GENBANK FILES")
 	for hit_uid in query_to_gb_dict:
 		gbk = query_to_gb_dict[hit_uid]
@@ -309,11 +417,11 @@ def gb_plier(query_to_gb_dict, uid_to_acc, win_size):
 			if "protein_id" in qualifiers:
 				prot_id = qualifiers["protein_id"][0]
 				# Search for the protein-ids of interest
-				if re.search(prot_id, uid_to_acc[hit_uid][0]):
+				if re.search(prot_id, uid_to_acc[hit_uid]):
 					# Process feature information for future ref
 					f_start = seq_feature.location.start.real
 					f_end = seq_feature.location.end.real
-					f_strand = seq_feature.strand
+					f_strand = seq_feature.location.strand
 					f_seq = qualifiers["translation"][0]
 					f_len = len(f_seq)
 					highlight_feature = copy.deepcopy(seq_feature)
@@ -344,9 +452,10 @@ def gb_plier(query_to_gb_dict, uid_to_acc, win_size):
 									  "mmseqs_hit": prot_id,
 									  "ptn_sequence": f_seq
 									  }
-					prot_dict.setdefault(uid_to_acc[hit_uid][1], prep_prot_dict)
+					prot_dict.setdefault(uid_to_acc[hit_uid], prep_prot_dict)
 					gbk_target.setdefault(f"{gbk.id}_{start}-{end}", gbk_focused)
 	current_time = datetime.datetime.now()
+	logging.debug(f"[{current_time}] --> GENOMIC REGIONS SUCCESSFULLY COMPILED IN GENBANK FILES")
 	print(f"[{current_time}] --> GENOMIC REGIONS SUCCESSFULLY COMPILED IN GENBANK FILES")
 	return gbk_target, prot_dict
 
@@ -354,6 +463,7 @@ def gb_plier(query_to_gb_dict, uid_to_acc, win_size):
 def export_records(rec_list, output_path, file_format,):
 	with open(f"{output_path}", "w") as handle:
 		SeqIO.write(rec_list, handle, file_format)
+	return
 
 
 def export_gbs(query_to_gb_dict, parent_path):
@@ -409,6 +519,7 @@ def main():
 	col_names = str(sys.argv[4])
 	parent_dir = str(sys.argv[5])
 	window_size = int(sys.argv[6])
+	log_file = str(sys.argv[7])
 	#	Wildcards
 	# query_name = str(sys.argv[7])
 	# db_prefix = str(sys.argv[8])
@@ -417,49 +528,65 @@ def main():
 	print("Entrez login")
 	Entrez.email = "thedoudnalab@gmail.com"
 
+	# Configure the logging system
+	logging.basicConfig(
+		level=logging.DEBUG,  # Set the minimum log level (DEBUG logs everything)
+		format="%(asctime)s %(message)s",  # Define log format
+		handlers=[
+			logging.FileHandler(log_file),  # Log to a file
+		]
+	)
+
 	# NCBI databases to search
-	efecth_db_list = ['nuccore', 'nucleotide']
+	efecth_db_list = ['nuccore']
 
 	# Import blastout table
 	col_names_list = col_names.split(" ")
 	blast_df = pd.read_csv(mmseqs_search_path,
-	                       names=col_names_list,
-	                       index_col=False).convert_dtypes().infer_objects()
+						   names=col_names_list,
+						   index_col=False).convert_dtypes().infer_objects()
 
 	# Process pd Dataframe and take the unique set of hit IDs
 	unique_mms_hits = list(set(blast_df[col_names].dropna().tolist()))
 
 	# Query NCBI to get nuccore UIDs associated with the protein hits using ESearch/ELink
 	current_time = datetime.datetime.now()
+	logging.debug(f" --> Linking protein hit ids to Nuccore entries")
 	print(f"[{current_time}] --> Linking protein hit ids to Nuccore entries")
 	nuc_uid_per_query, hit_to_link, hits_not_found = ptn_to_nuc(unique_mms_hits, efecth_db_list)
 
 	# Get GenBank entries through EFetch
 	current_time = datetime.datetime.now()
+	logging.debug(f" --> Retrieving GenBank objects")
 	print(f"[{current_time}] --> Retrieving GenBank objects")
 	gb_seqrec_per_query = nuc_to_gb(nuc_uid_per_query)
 
 	# Narrow down Genbank files based on hit UIDs
 	current_time = datetime.datetime.now()
+	logging.debug(f" --> Extracting relevant features from GenBank objects")
 	print(f"[{current_time}] --> Extracting relevant features from GenBank objects")
-	targeg_gb_dict, target_hit_dict = gb_plier(gb_seqrec_per_query, hit_to_link, window_size)
+	target_gb_dict, target_hit_dict = gb_plier(gb_seqrec_per_query, hit_to_link, window_size)
 
 	# Parse hit sequences to FASTA file
 	hit_seq_record_list = ncbi_fetch(unique_mms_hits, 'protein', 'fasta')
 
 	# Generate summary dataframe
 	current_time = datetime.datetime.now()
+	logging.debug(f" --> GENERATE REPORTS")
 	print(f"[{current_time}] --> GENERATE REPORTS")
 	df = pd.DataFrame.from_dict(target_hit_dict, orient='index')
 
 	# Export outputs
 	current_time = datetime.datetime.now()
+	logging.debug(f" --> EXPORT FILES")
 	print(f"[{current_time}] --> EXPORT FILES")
-	export_gbs(targeg_gb_dict, parent_dir)
+	export_gbs(target_gb_dict, parent_dir)
 	df.to_csv(retrieval_report, index=False)
 
 	# hit_taxid_seq_record_list = attach_label_to_fasta(hit_seq_record_list, id_to_taxid)
 	export_records(hit_seq_record_list, output_fasta_region, 'fasta')
+
+	logging.debug(f" --> ALL PROCESSES FINISHED")
 
 
 if __name__ == "__main__":

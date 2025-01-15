@@ -85,6 +85,8 @@ rule create_list_input:
 		))
 	output:
 		target_entries_list = "{run}/dali_run_elements/batches/batch_{batch_index}/list_batch_{batch_index}.txt"
+	params:
+		output_directory = "{run}/dali_run_elements/batches/batch_{batch_index}"
 	message:
 		"""
 Create list of inputs on: 
@@ -227,6 +229,7 @@ rule broad_seq_search_aa:
 		tmpdir = config['tmpdir'],
 		mms_n_iterations = config['mms_n_iterations'],
 		mmseqs_source_db=config["mmseqs_db_path"],
+		mmseqs_params_string=config["mmseqs_search_params"]
 	message:
 		"""
 Create MMSEQS query databse from FASTA file:\n {input.aggregated_multi_fasta}
@@ -244,7 +247,7 @@ Writes single column hit results on: {output.mmseqs_search_result}
 		mmseqs createdb {input.aggregated_multi_fasta} {wildcards.query_name}_queryDB
 		mmseqs createindex {wildcards.query_name}_queryDB tmp
 		
-		mmseqs search {wildcards.query_name}_queryDB {params.mmseqs_source_db} {wildcards.query_name}_resultDB tmp --num-iterations {params.mms_n_iterations} -s 1 --max-seqs 1 --min-ungapped-score 85
+		mmseqs search {wildcards.query_name}_queryDB {params.mmseqs_source_db} {wildcards.query_name}_resultDB tmp --num-iterations {params.mms_n_iterations} {params.mmseqs_params_string}
 		mmseqs convertalis {wildcards.query_name}_queryDB {params.mmseqs_source_db} {wildcards.query_name}_resultDB {wildcards.query_name}_resultDB.m8
 		mmseqs convertalis {wildcards.query_name}_queryDB {params.mmseqs_source_db} {wildcards.query_name}_resultDB --format-output "target" {wildcards.query_name}_resultDB_hits
 		mv {wildcards.query_name}_resultDB_hits {output.mmseqs_search_result}
@@ -292,6 +295,7 @@ rule cluster_hits:
 	params:
 		tmpdir = config['tmpdir'],
 		output_directory = "{run}/alignments/{query_name}/mmseqs/results",
+		mmseqs_clust_params_string=config["mmseqs_clust_params"],
 	conda:
 		'envs/mmseqs.yaml'
 	threads:
@@ -303,7 +307,7 @@ rule cluster_hits:
 		conda activate mmseqs
 		mkdir -p {params.tmpdir}/{wildcards.query_name}/mmseqs_cluster
 		cd {params.tmpdir}/{wildcards.query_name}/mmseqs_cluster
-		mmseqs easy-linclust {input.mmseqs_hits_fasta} {wildcards.query_name}_clustered tmp -c 0.25 --cluster-mode 1 --threads {threads}
+		mmseqs easy-cluster {input.mmseqs_hits_fasta} {wildcards.query_name}_clustered tmp_hits {params.mmseqs_clust_params_string}
 		mv {wildcards.query_name}_clustered* {params.output_directory}
 		"""
 
@@ -365,10 +369,19 @@ Export predictions to:\n {params.crispr_call_dir}
 		eval "$(conda shell.bash hook)"
 		conda activate minced
 		files_list={params.fasta_region_dir}/*.fasta
+		rm -f {output.crispr_call_manifest}
         for fasta_file in $files_list
         do
             base_name=$(basename "$fasta_file" .fasta)
-            minced minced "$fasta_file" {params.crispr_call_dir}/"$base_name".fasta {params.crispr_call_dir}/"$base_name".gff
-            cat $base_name >> {output.crispr_call_manifest}
+            minced "$fasta_file" {params.crispr_call_dir}/"$base_name".fasta {params.crispr_call_dir}/"$base_name".gff
+            echo $base_name >> {output.crispr_call_manifest}
         done;
 		"""
+
+# noinspection SmkAvoidTabWhitespace
+# rule summarize_crispr_call:
+# 	input:
+# 		crispr_call_manifest = "{run}/alignments/{query_name}/minced/{query_name}_vs_mmseqsDB_array.manifest",
+# 		retrieval_report = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_summary_report.csv",
+# 	output:
+# 		crispr_call_report = "{run}/alignments/{query_name}/minced/{query_name}_crispr_summary.txt",

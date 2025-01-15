@@ -7,8 +7,14 @@ run: ""
 #   Consult the README.md and download it from snakedali's aws bucket
 db_dir: ""
 
+# === MMSEQS Configuration
 # MMSEQS Database(s) path
 mmseqs_db_path: "" # "<my_path>/mmseqs_db"
+# MMSEQS parameters string
+mmseqs_search_params: "-s 1 --max-seqs 50 --min-ungapped-score 85 -e 1E-05"
+mmseqs_clust_params: "--cluster-mode 2 -c 0.5 --min-seq-id 0.95"
+# MMSEQS2 n of iterations
+mms_n_iterations: 2
 
 # AFDB Fasta file path
 #   This file can be downloaded from AFDB's FTP page: https://ftp.ebi.ac.uk/pub/databases/alphafold/
@@ -30,9 +36,6 @@ input_dir: ""
 # Window Size
 window_size: 10000
 
-# MMSEQS2 n of iterations
-mms_n_iterations: 10
-
 # Commonly a temporary directory where intermediate files are generated and purged
 #   Set up this environment variable prior to Snakedali execution
 tmpdir: '$TMPDIR'
@@ -45,8 +48,8 @@ tcoffee_bin: "" # "<path_to_tcoffee>/.t_coffee/bin/linux/t_coffee"
 tcoffee_1st_params: "-aln |input| -output fasta_aln -matrix=blosum30mt"
 tcoffee_2nd_params: "-aln |input| -output fasta_aln -matrix=blosum30mt -usetree= |tree|"
 
-# DO NOT CHANGE: Apptainer/Singularity Container Path
-singularity_path: "apptainer_sif/import_container.sif"
+#Apptainer/Singularity Container Path
+singularity_path: "../apptainer_sif/import_container.sif"
 
 # According to the 'cluster' variable in: profile_sge/config.yaml
 threads: 10

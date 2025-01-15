@@ -48,6 +48,16 @@ def recover_process(recover_buf, mode):
 		return combined_dict
 
 
+def efetch_fasta(ncbi_db, acc, file_format):
+	print(f"Fetching {acc} from database '{ncbi_db}'")
+	def efetch_func():
+		handle = Entrez.efetch(db=f"{ncbi_db}", id=f"{acc}", rettype=f"{file_format}", retmode="text")
+		return handle
+	handle = handle_api_errors(efetch_func)
+	record = SeqIO.read(handle, file_format)
+	return record
+
+
 def ncbi_fetch(fasta_recs_dict, coord_dict, ncbi_db, file_format, rank):
 	Entrez.email = "thedoudnalab@gmail.com"
 	record_list = []
@@ -60,11 +70,7 @@ def ncbi_fetch(fasta_recs_dict, coord_dict, ncbi_db, file_format, rank):
 			logging.debug(f"*** Processed {count_processed} entries on rank {rank}***")
 			report_threshold += threshold_step
 
-		def efetch_process():
-			handle = Entrez.efetch(db=ncbi_db, id=f"{acc}", rettype=file_format, retmode="text")
-			return SeqIO.read(handle, file_format)
-
-		record = handle_api_errors(efetch_process)
+		record = efetch_fasta(ncbi_db, acc, file_format)
 
 		# Synchronize accessions orthography
 		try:
@@ -86,8 +92,8 @@ def ipg_routine(db, hit_uid):
 	link_coords = None
 
 	def ipg_handler():
-		nucleotide_accession = False
-		coords = False
+		nucleotide_accession = None
+		coords = None
 		# Fetch the IPG table for the given protein ID
 		handle = Entrez.efetch(db=f"{db}", id=f"{hit_uid}", rettype="ipg", retmode="text")
 		ipg_data = handle.read().decode('utf-8')  # Decode the bytes data
@@ -101,10 +107,11 @@ def ipg_routine(db, hit_uid):
 					nucleotide_accession = columns[2]
 					start = int(columns[3])
 					stop = int(columns[4])
-					coords = [start, stop]
+					strand = str(columns[5])
+					coords = [start, stop, strand]
 					return nucleotide_accession, coords
 				except ValueError:
-					continue
+					print(f"Value error...")
 		return nucleotide_accession, coords
 
 	try:
@@ -140,6 +147,26 @@ def handle_api_errors(func, retries=20, delay=1):
 	return None
 
 
+def append_uniq_tuple(my_tuple: tuple, my_list: list):
+	my_list.append(my_tuple) if my_tuple not in my_list else my_list
+	return my_list
+
+
+def slice_seqrecord_sequence(seqrecord, start_coord, end_coord):
+	region_record = seqrecord
+	region_sequence = ''
+	try:
+		region_sequence = region_record.seq[start_coord:end_coord]
+	except AttributeError:
+		logging.debug(f"WARNING: Could not find sequence for {seqrecord.id}. Skipping")
+	return region_sequence
+
+
+def extract_second_position_id(my_dict: dict, target_key, separator, field):
+	extracted_list = [key.split(separator)[field] for key in my_dict.keys() if key.startswith(target_key)]
+	return list(set(extracted_list))
+
+
 def ptn_to_nuc(id_list):
 	nucleotide_uid_list = []
 	source2target = {}
@@ -166,7 +193,9 @@ def ptn_to_nuc(id_list):
 		if loop_nuc_gi is None:
 			not_found_list.append(uid)
 			continue
-		if loop_nuc_gi:
+		if loop_nuc_gi is not None:
+			# PIVOTAL CHANGE: Implement unique nuc|ptn keys
+			loop_nuc_gi += f"|{uid}"
 			source2target[loop_nuc_gi] = seq_id
 			nucleotide_uid_list.append(loop_nuc_gi)
 			nuc_coords_dict.setdefault(loop_nuc_gi, nuc_coords)
@@ -185,6 +214,7 @@ def nuc_to_gb(uid_list):
 	# Get Genbank records for each Nuccore UID
 	gb_records = {}
 	fasta_records = {}
+	track_duplicate_uids = []
 	logging.debug(f" --> GATHER REGIONS FOR HITS. PROGRESS")
 
 	def efetch_gb():
@@ -197,29 +227,44 @@ def nuc_to_gb(uid_list):
 
 	for uid in uid_list:
 		progress += 1
-		if progress == threshold_progress_report:
-			current_time = datetime.datetime.now()
-			print(f"[{current_time}] FINISHED {progress} ENTRIES OUT OF {len(uid_list)}")
-			threshold_progress_report += threshold_progress_step
+		# TRIM NUCLEOTIDE UID PRIOR TO ENTREZ SEARCH
+		uid = uid.split("|")[0]
+		if uid not in track_duplicate_uids:
+			if progress == threshold_progress_report:
+				current_time = datetime.datetime.now()
+				print(f"[{current_time}] FINISHED {progress} ENTRIES OUT OF {len(uid_list)}")
+				threshold_progress_report += threshold_progress_step
 
-		# handle = Entrez.efetch(db="nucleotide", id=f"{uid}", rettype="gb", retmode="text")
-		# record = SeqIO.read(handle, "genbank")
-		record = handle_api_errors(efetch_gb)
-		fasta_record = handle_api_errors(efecth_fasta)
+			# handle = Entrez.efetch(db="nucleotide", id=f"{uid}", rettype="gb", retmode="text")
+			# record = SeqIO.read(handle, "genbank")
+			record = handle_api_errors(efetch_gb)
+			fasta_record = handle_api_errors(efecth_fasta)
 
-		gb_records.setdefault(uid, record)
-		fasta_records.setdefault(uid, fasta_record)
+			gb_records.setdefault(uid, record)
+			fasta_records.setdefault(uid, fasta_record)
+			track_duplicate_uids.append(uid)
 	# Returns a list  of Genbank SeqRecords objects
 	return gb_records, fasta_records
 
 
-def gb_plier(query_to_gb_dict, query_to_fasta_dict, nuc_coords_dict, uid_to_acc, win_size):
+def gb_plier(query_to_gb_dict, query_to_fasta_dict, nuc_coords_dict, nuc_to_ptn, win_size):
 	gbk_target = {}
 	prot_dict = {}
-	start_coord = 0
-	end_coord = 0
-	highlight_feature = None
+	# start_coord = 0
+	# end_coord = 0
+	# prep_prot_dict = {"nuccore_acc": 'NA',
+	# 				  "window_start": 'NA',
+	# 				  "window_end": 'NA',
+	# 				  "feature_start": 'NA',
+	# 				  "feature_end": 'NA',
+	# 				  "strand": 'NA',
+	# 				  "feature_len": 'NA',
+	# 				  "mmseqs_hit": 'NA',
+	# 				  "ptn_sequence": 'NA'}
+	# highlight_feature = None
 	for hit_uid in query_to_gb_dict:
+		# Keep track of non-GenBank entries so they're not looked up several times
+		ipg_scanned = []
 		gbk = query_to_gb_dict[hit_uid]
 		try:
 			gbk_features = gbk.features
@@ -234,11 +279,11 @@ def gb_plier(query_to_gb_dict, query_to_fasta_dict, nuc_coords_dict, uid_to_acc,
 				highlight_feature.type = "highlight"
 			except AttributeError:
 				continue
-			# Restrict search to protein-containing features
+			# Restrict search to protein-containing features extracted directly from GenBank Records
 			if "protein_id" in qualifiers:
 				prot_id = qualifiers["protein_id"][0]
 				# Search for the protein-ids of interest
-				if re.search(prot_id, uid_to_acc[hit_uid]):
+				if re.search(prot_id, nuc_to_ptn[f"{hit_uid}|{prot_id}"]):
 					# Process feature information for future ref
 					f_start = seq_feature.location.start.real
 					f_end = seq_feature.location.end.real
@@ -254,7 +299,6 @@ def gb_plier(query_to_gb_dict, query_to_fasta_dict, nuc_coords_dict, uid_to_acc,
 					# Gather protein data for reference
 					prep_prot_dict = {
 									  "nuccore_acc": gbk.id,
-									  # "region_seq": gbk.seq[start:end + 1],
 									  "window_start": start_coord,
 									  "window_end": end_coord,
 									  "feature_start": f_start,
@@ -264,30 +308,72 @@ def gb_plier(query_to_gb_dict, query_to_fasta_dict, nuc_coords_dict, uid_to_acc,
 									  "mmseqs_hit": prot_id,
 									  "ptn_sequence": f_seq
 									  }
-					prot_dict.setdefault(uid_to_acc[hit_uid], prep_prot_dict)
-			else:
-				f_start, f_end = nuc_coords_dict[hit_uid]
-				# Set start/end coords using window size
-				start_coord = max(int(min([f_start, f_end])) - win_size, 0)
-				end_coord = min(int(max([f_start, f_end])) + win_size + 1, len(gbk.seq))
 
-		# Process FASTA record
-		region_record = query_to_fasta_dict[hit_uid]
-		try:
-			region_sequence = region_record.seq[start_coord:end_coord]
-		except AttributeError:
-			logging.debug(f"WARNING: Could not find sequence for {hit_uid}. Skipping")
-			continue
-		# Create a SeqRecord object with the feature of interest
-		gbk_focused = SeqRecord(
-			id=gbk.id,
-			annotations=gbk.annotations,
-			dbxrefs=gbk.dbxrefs,
-			seq=region_sequence,
-			description=gbk.description
-		)
-		gbk_focused.features.append(highlight_feature)
-		gbk_target.setdefault(f"{gbk.id}_{start_coord}-{end_coord}", gbk_focused)
+					# Process FASTA record
+					region_sequence = slice_seqrecord_sequence(query_to_fasta_dict[hit_uid], start_coord, end_coord)
+
+					# Create a SeqRecord object with the feature of interest
+					gbk_focused = SeqRecord(
+						id=gbk.id,
+						annotations=gbk.annotations,
+						dbxrefs=gbk.dbxrefs,
+						seq=region_sequence,
+						description=gbk.description
+					)
+
+					# Generate the Protein Dictionary Output
+					prot_dict.setdefault(nuc_to_ptn[f"{hit_uid}|{prot_id}"], prep_prot_dict)
+					# Generate the GenBank Dictionary Output
+					gbk_focused.features.append(highlight_feature)
+					gbk_target.setdefault(f"{gbk.id}_{start_coord}-{end_coord}", gbk_focused)
+			# As a second option, scrape through IPG results
+			elif "protein_id" not in qualifiers:
+				for prot_id in set(nuc_to_ptn.values()):
+					# Avoid looking up the same protein several times
+					if nuc_to_ptn[f"{hit_uid}|{prot_id}"] not in set(ipg_scanned):
+						f_start, f_end, f_strand = nuc_coords_dict[f"{hit_uid}|{prot_id}"]
+						# Set start/end coords using window size
+						start_coord = max(int(min([f_start, f_end])) - win_size, 0)
+						end_coord = min(int(max([f_start, f_end])) + win_size + 1, len(gbk.seq))
+						try:
+							record = efetch_fasta('protein', prot_id, 'fasta')
+							prot_sequence = str(record.seq)
+							f_len = len(prot_sequence)
+							# Save Protein ID to avoid looking it up several times
+							ipg_scanned.append(prot_id)
+						except AttributeError:
+							logging.warning(f'Protein sequence for {prot_id} (NUCCORE: {hit_uid}) not found')
+							prot_sequence = 'NA'
+							f_len = 'NA'
+
+						prep_prot_dict = {"nuccore_acc": gbk.id,
+										  "window_start": start_coord,
+										  "window_end": end_coord,
+										  "feature_start": f_start,
+										  "feature_end": f_end,
+										  "strand": f_strand,
+										  "feature_len": f_len,
+										  "mmseqs_hit": prot_id,
+										  "ptn_sequence": prot_sequence}
+
+						# Process FASTA record
+						region_sequence = slice_seqrecord_sequence(query_to_fasta_dict[hit_uid], start_coord, end_coord)
+
+						# Create a SeqRecord object with the feature of interest
+						gbk_focused = SeqRecord(
+							id=gbk.id,
+							annotations=gbk.annotations,
+							dbxrefs=gbk.dbxrefs,
+							seq=region_sequence,
+							description=gbk.description
+						)
+
+						# Generate the Protein Dictionary Output
+						prot_dict.setdefault(nuc_to_ptn[f"{hit_uid}|{prot_id}"], prep_prot_dict)
+						# Generate the GenBank Dictionary Output
+						gbk_focused.features.append(highlight_feature)
+						gbk_target.setdefault(f"{gbk.id}_{start_coord}-{end_coord}", gbk_focused)
+
 	return gbk_target, prot_dict
 
 
@@ -327,6 +413,8 @@ def main():
 	divided_work = []
 	process_target_gb = {}
 	process_target_hit = {}
+	process_hits_not_found = {}
+	process_rec_per_query = {}
 
 	# Entrez authentication
 	print("Entrez login")
@@ -384,7 +472,7 @@ def main():
 	# Narrow down Genbank files based on hit UIDs
 	logging.debug(f"RANK {my_rank} --> COMPILE GENOMIC REGIONS IN GENBANK FILES")
 	target_gb_dict, target_hit_dict = gb_plier(gb_seqrec_per_query, fasta_seqrec_per_query, nucleotide_coords_dict, hit_to_link, window_size)
-	logging.debug(f" --> GENOMIC REGIONS SUCCESSFULLY COMPILED IN GENBANK FILES")
+	logging.debug(f"RANK {my_rank} --> GENOMIC REGIONS SUCCESSFULLY COMPILED IN GENBANK FILES")
 
 	# Parse hit sequences to FASTA file
 	# hit_seq_record_list = ncbi_fetch(fasta_seqrec_per_query, nucleotide_coords_dict, efetch_db, 'fasta', my_rank)
@@ -392,10 +480,14 @@ def main():
 	# == APPEND THE PROCESSED ITEMS TO LIST WITHIN RANK DICTIONARY
 	process_target_gb.setdefault(my_rank, []).append(target_gb_dict)
 	process_target_hit.setdefault(my_rank, []).append(target_hit_dict)
+	process_hits_not_found.setdefault(my_rank, []).append(hits_not_found)
+	process_rec_per_query.setdefault(my_rank, []).append(gb_seqrec_per_query)
 
 	# === RECOVER PROCESSED CONTENTS FROM RANKS
 	recvbuf_target_gb = comm.gather(process_target_gb, root=0)
 	recvbuf_target_hit = comm.gather(process_target_hit, root=0)
+	recvbuf_hits_not_found = comm.gather(process_hits_not_found, root=0)
+	recvbuf_rec_per_query = comm.gather(process_rec_per_query, root=0)
 
 	# logging.debug(f"Recovery target_gb: {recvbuf_target_gb}\n\n")
 	# logging.debug(f"Recovery target_hit: {recvbuf_target_hit}\n\n")
@@ -405,17 +497,28 @@ def main():
 	if comm.rank == 0:
 		combined_target_gb = recover_process(recvbuf_target_gb, 'dict')
 		combined_target_hit = recover_process(recvbuf_target_hit, 'dict')
+		combined_hits_not_found = recover_process(recvbuf_hits_not_found, 'list')
+		combined_rec_per_query = recover_process(recvbuf_rec_per_query, 'dict')
 		# combined_hit_seq_record = recover_process(recvbuf_hit_seq_record, 'list')
 
 		# Generate summary dataframe
-		current_time = datetime.datetime.now()
-		logging.debug(f" --> GENERATE REPORTS")
-		print(f"[{current_time}] --> GENERATE REPORTS")
+		logging.debug(f"RANK {my_rank} --> GENERATE REPORTS")
+		print(f"RANK {my_rank} --> GENERATE REPORTS")
 		df = pd.DataFrame.from_dict(combined_target_hit, orient='index')
 		# Pull information from Fseek cluster members and MMSEQS Hits
 		# == Import ID links table
 		id_links_df = pd.read_csv(id_links_table, sep="\t", header=None)[[0, 1]]
 		seed_report_df = df.merge(id_links_df, left_on='mmseqs_hit', right_on=1).drop(columns=1)
+
+		# Logging tally
+		logging.info(f"""
+		RANK {my_rank} --> TALLYING ENTRIES:
+		A - Total protein IDs provided as input: {len(full_unique_mms_hits)}
+		B - Total successful ptn->nuccore conversions processed: {len(combined_target_hit)}
+		C - Total non-successful ptn->nuccore conversions (esearch + efetch on the 'protein' db): {len(combined_hits_not_found)}
+		D - Total successful nuccore->genbank retrievals processed (efetch on the 'nucleotide' db: {len(combined_rec_per_query)}
+		In case (A - B) > C, that means entries were lost during efectch on the 'nucleotide' db. 
+		""")
 
 		# Export outputs
 		current_time = datetime.datetime.now()

@@ -15,5 +15,5 @@ broad_seq_search_aa:
   cores: 10
 
 retrieve_genomic_context:
-  time: '60:00:00'
+  time: '80:00:00'
   cores: 10
