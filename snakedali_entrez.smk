@@ -36,6 +36,7 @@ rule cluster_hits:
 	params:
 		tmpdir = config['tmpdir'],
 		output_directory = "{run}/alignments/{query_name}/mmseqs/results",
+		mmseqs_clust_params_string=config["mmseqs_clust_params"],
 	conda:
 		'envs/mmseqs.yaml'
 	threads:
@@ -47,7 +48,7 @@ rule cluster_hits:
 		conda activate mmseqs
 		mkdir -p {params.tmpdir}/{wildcards.query_name}/mmseqs_cluster
 		cd {params.tmpdir}/{wildcards.query_name}/mmseqs_cluster
-		mmseqs easy-linclust {input.mmseqs_hits_fasta} {wildcards.query_name}_clustered tmp -c 0.25 --cluster-mode 1 --threads {threads}
+		mmseqs easy-cluster {input.mmseqs_hits_fasta} {wildcards.query_name}_clustered tmp_hits {params.mmseqs_clust_params_string}
 		mv {wildcards.query_name}_clustered* {params.output_directory}
 		"""
 
@@ -109,10 +110,19 @@ Export predictions to:\n {params.crispr_call_dir}
 		eval "$(conda shell.bash hook)"
 		conda activate minced
 		files_list={params.fasta_region_dir}/*.fasta
+		rm -f {output.crispr_call_manifest}
         for fasta_file in $files_list
         do
             base_name=$(basename "$fasta_file" .fasta)
-            minced minced "$fasta_file" {params.crispr_call_dir}/"$base_name".fasta {params.crispr_call_dir}/"$base_name".gff
-            cat $base_name >> {output.crispr_call_manifest}
+            minced "$fasta_file" {params.crispr_call_dir}/"$base_name".fasta {params.crispr_call_dir}/"$base_name".gff
+            echo $base_name >> {output.crispr_call_manifest}
         done;
 		"""
+
+# noinspection SmkAvoidTabWhitespace
+# rule summarize_crispr_call:
+# 	input:
+# 		crispr_call_manifest = "{run}/alignments/{query_name}/minced/{query_name}_vs_mmseqsDB_array.manifest",
+# 		retrieval_report = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_summary_report.csv",
+# 	output:
+# 		crispr_call_report = "{run}/alignments/{query_name}/minced/{query_name}_crispr_summary.txt",

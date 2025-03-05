@@ -10,7 +10,7 @@ batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 # conda activate snake
 
 # Cluster run template
-# nohup snakemake --snakefile snakedali.smk --configfile config/dali_bmarking.yaml --profile_sge profile_sge &
+# nohup snakemake --snakefile snakedali.smk --configfile config/dali_bmarking.yaml --profile profile_sge &
 
 # noinspection SmkAvoidTabWhitespace
 rule all:

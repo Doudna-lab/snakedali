@@ -6,6 +6,8 @@ run: ""
 #   The <pdb_files_DAT> is a pre-built file that must be downloaded prior to Snakedali execution
 #   Consult the README.md and download it from snakedali's aws bucket
 db_dir: ""
+# Range of batches within the database (just above) to be processed
+batch_range: [0,2302]
 
 # === MMSEQS Configuration
 # MMSEQS Database(s) path
@@ -68,6 +70,3 @@ id_convert: "support_data/clustered_AFDB_structure_key.txt"
 # PDB file names without file extensions
 #!!! == These files are expected to be found on {input_dir} == !!!
 query_name: [""] # e.g.: ["5id6", "4dyn", "4an8"]
-
-# DO NOT CHANGE: Range of batches within the database to be processed
-batch_range: [0,2302]
