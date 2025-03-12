@@ -131,32 +131,18 @@ git clone --depth=1 https://github.com/Doudna-lab/nidali.git
 </details>
 
 <details>
-<summary>4.3 Git LFS</summary>
+<summary>4.3 Apptainer SIF</summary>
 <ul>
   
-  - Two singularity/apptainer containers are provided in this repository
-  - Although these are support files which are <b><u>not</u></b> integrated to the pipeline, they could be useful for users who may be facing issues when trying to get DaliLite installed in unsupported machines.
-  - These large files will be indexed upon cloning and will take a small amount of storage. 
-  - The user can then download them with Git LFS in case they need the containerized version.
-  
-  - 1.1 Install Git LFS to pull apptainer containers
-
-  -1.1.1 Linux Install
+  - One singularity/apptainer container is provided for this repository
+  - This is a workaround to avoid common problems with the import.pl module from Dalilite.
+  - The user can then download them from google drive:
+   
+   - Linux Install:
 ```
-apt install git-lfs
-git lfs install
+wget https://drive.google.com/drive/folders/117NRrL1iJ4lb_V3tBZzqC79lvkJvE9cS?usp=drive_link
 ```
 
-  -1.1.2 macOS Install
-```
-brew install git-lfs
-git lfs install
-```
-
-  -1.1.3 Pull apptainer containers
-```
-git lfs pull
-```
 </ul>
 </details>
 
