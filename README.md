@@ -125,7 +125,7 @@ tar zxf <your_local_path>/pdb_files_DAT.tar.gz
 
   - Clone repository files
 ```
-git clone https://github.com/Doudna-lab/nidali.git
+git clone --depth=1 https://github.com/Doudna-lab/nidali.git
 ```
 </ul>
 </details>
@@ -234,7 +234,7 @@ git lfs pull
  - Once the necessary inputs have been set up in the `configuration file`, Snakedali shall be called as in:
 
 ```
-snakemake --snakefile snakedali.smk --configfile config/dali_template.yaml --profile profile/
+snakemake --snakefile snakedali_align.smk --configfile config/dali_template.yaml --profile profile_sge/
 ```
 
 </ul>
