@@ -1,5 +1,6 @@
 # == Native Modules
 # == Installed Modules
+import argparse
 import re
 import pandas as pd
 # == Project Modules
@@ -115,15 +116,35 @@ def merge_dictionaries(dict1, dict2):
 
 
 def main():
+	# # Snakemake I/O
+	# # === Inputs
+	# query_name = str(snakemake.wildcards.query_name)
+	# output_dali_list = list(snakemake.input.alignment_list)
+	# query_dat_path = str(snakemake.input.query_dat)
+	# # === Outputs
+	# aggregated_report = str(snakemake.output.aggregated_report)
+	# # === Params
+	# id_converstion_table_path = str(snakemake.params.id_converstion_table)
+
+	# Parse the command-line arguments
+	parser = argparse.ArgumentParser()
+	# parser.add_argument("--crispr_calls", dest="crispr_call_manifest", required=True)
+	parser.add_argument("--query_name", dest="query_name", required=True)
+	parser.add_argument("--output_dali_list", nargs='+', dest="output_dali_list", required=True)
+	parser.add_argument("--query_dat_path", dest="query_dat_path", required=True)
+	parser.add_argument("--aggregated_report", dest="aggregated_report", required=True)
+	parser.add_argument("--id_converstion_table_path", dest="id_converstion_table_path", required=True)
+	args = parser.parse_args()
+
 	# Snakemake I/O
 	# === Inputs
-	query_name = str(snakemake.wildcards.query_name)
-	output_dali_list = list(snakemake.input.alignment_list)
-	query_dat_path = str(snakemake.input.query_dat)
+	query_name = args.query_name
+	output_dali_list = list(args.output_dali_list)
+	query_dat_path = args.query_dat_path
 	# === Outputs
-	aggregated_report = str(snakemake.output.aggregated_report)
+	aggregated_report = args.aggregated_report
 	# === Params
-	id_converstion_table_path = str(snakemake.params.id_converstion_table)
+	id_converstion_table_path = args.id_converstion_table_path
 
 	# === Set key variables
 	merged_dali_parsed_dict = {}
@@ -162,7 +183,7 @@ def main():
 			# Add in Alphafold Links
 			parsed_dali_df['Alphafold_link'] = "https://alphafold.ebi.ac.uk/entry/" + parsed_dali_df.index.get_level_values(1)
 			# Export Parsed Dataframe
-			parsed_dali_df.to_excel(aggregated_report)
+			parsed_dali_df.to_csv(aggregated_report)
 
 
 if __name__ == "__main__":

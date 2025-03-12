@@ -1,5 +1,5 @@
 latency-wait: 120
-reason: True
+#reason: True
 #use-conda: True
 rerun-incomplete: True
 show-failed-logs: True
@@ -11,8 +11,8 @@ jobs: 12                              #Use at most N CPU cluster/cloud jobs in p
 
 rerun-triggers: 'mtime'
 
-cluster: "sbatch -t {cluster.time}"
-cluster-config: "config/cluster.yaml"
+#cluster: "sbatch -t {cluster.time}"
+#cluster-config: "config/cluster.yaml"
 
 # Working Directory
 directory: "snake_log"

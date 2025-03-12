@@ -295,7 +295,11 @@ def gb_plier(query_to_gb_dict, query_to_fasta_dict, nuc_coords_dict, nuc_to_ptn,
 					f_len = len(f_seq)
 					# Set start/end coords using window size
 					start_coord = max(int(min([f_start, f_end])) - win_size, 0)
-					end_coord = min(int(max([f_start, f_end])) + win_size + 1, len(gbk.seq))
+
+					## !!! REMOVED +1 from the end_coord for testing
+					## THis was causing an asymetrical window size with 20001bp in size
+					end_coord = min(int(max([f_start, f_end])) + win_size, len(gbk.seq))
+
 					# Gather protein data for reference
 					prep_prot_dict = {
 									  "nuccore_acc": gbk.id,

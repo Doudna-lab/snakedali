@@ -12,7 +12,7 @@ batch_index = list(range(config["batch_range"][0],config["batch_range"][1] + 1))
 # conda activate snake
 
 # Cluster run template
-# nohup snakemake --snakefile snakedali.smk --configfile config/dali_bmarking.yaml --profile_sge profile_sge &
+# nohup snakemake --snakefile snakedali_entrez.smk --configfile config/dali_bmarking.yaml --profile_sge profile_slurm &
 
 # noinspection SmkAvoidTabWhitespace
 rule all:
@@ -25,7 +25,11 @@ rule all:
 			run=config["run"],query_name=config["query_name"]),
 		# Predict CRISPR arrays on the recovered sequences
 		expand("{run}/alignments/{query_name}/minced/{query_name}_vs_mmseqsDB_array.manifest",
+			run=config["run"],query_name=config["query_name"]),
+		# Score CRISPR arrays on the recovered sequences
+		expand("{run}/alignments/{query_name}/scores/{query_name}_vs_mmseqsDB_scores.manifest",
 			run=config["run"],query_name=config["query_name"])
+
 
 # noinspection SmkAvoidTabWhitespace
 rule cluster_hits:
@@ -120,9 +124,32 @@ Export predictions to:\n {params.crispr_call_dir}
 		"""
 
 # noinspection SmkAvoidTabWhitespace
-# rule summarize_crispr_call:
-# 	input:
-# 		crispr_call_manifest = "{run}/alignments/{query_name}/minced/{query_name}_vs_mmseqsDB_array.manifest",
-# 		retrieval_report = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_summary_report.csv",
-# 	output:
-# 		crispr_call_report = "{run}/alignments/{query_name}/minced/{query_name}_crispr_summary.txt",
+rule score_crispr_regions:
+	input:
+		retrieval_report = "{run}/alignments/{query_name}/mmseqs/results/{query_name}_vs_mmseqsDB_summary_report.csv",
+		aggregated_report = "{run}/results/{query_name}/{query_name}_daliout.xlsx",
+	output:
+		crispr_scores_manifest = "{run}/alignments/{query_name}/scores/{query_name}_vs_mmseqsDB_scores.manifest",
+	params:
+		fseek_clustered_representatives = config["fseek_clustered_representatives"],
+		crispr_scores = "{run}/alignments/{query_name}/scores/{query_name}_vs_mmseqsDB_scores.csv",
+		fasta_region_dir = "{run}/alignments/{query_name}/mmseqs/results/fna_region",
+		crispr_call_dir = "{run}/alignments/{query_name}/minced",
+		window_size = config["window_size"],
+	message:
+		"""
+Score CRISPR regions from minced output:\n {input.retrieval_report}
+Export scores to:\n {params.crispr_scores}
+		"""
+	shell:
+		"""
+		eval "$(conda shell.bash hook)"
+		conda activate biopympi
+		python -u ../py/score_regions.py \
+		 --entrez_report {input.retrieval_report} \
+		 --dali_summary {input.aggregated_report} \
+		 --fseek_clusters {params.fseek_clustered_representatives} \
+		 --crispr_call_dir {params.crispr_call_dir} \
+		 --window_size {params.window_size} \
+		 --report_output {output.crispr_scores_manifest}
+		"""

@@ -50,7 +50,7 @@ tcoffee_bin: "" # "<path_to_tcoffee>/.t_coffee/bin/linux/t_coffee"
 tcoffee_1st_params: "-aln |input| -output fasta_aln -matrix=blosum30mt"
 tcoffee_2nd_params: "-aln |input| -output fasta_aln -matrix=blosum30mt -usetree= |tree|"
 
-#Apptainer/Singularity Container Path
+#Apptainer/Singularity Container Path | NEEDS ABSOLUTE PATH
 singularity_path: "../apptainer_sif/import_container.sif"
 
 # According to the 'cluster' variable in: profile_sge/config.yaml

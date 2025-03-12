@@ -37,6 +37,7 @@ dependencies:
   - ncurses=6.5
   - numpy=2.0.0
   - openmpi=5.0.3
+  - openpyxl=3.1.5
   - openssl=3.3.1
   - packaging=24.1
   - pandas=2.2.2
