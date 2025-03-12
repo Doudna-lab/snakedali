@@ -63,7 +63,7 @@ mpi_ranks: 30
 dat_id_list_prefix: "list_batch_"
 
 # DO NOT CHANGE: Alphafold ID conversion table
-id_convert: "support_data/clustered_AFDB_structure_key.txt"
+id_convert: "../support_data/clustered_AFDB_structure_key.txt"
 
 # === Run-associated variables
 
