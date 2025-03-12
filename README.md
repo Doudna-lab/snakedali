@@ -140,6 +140,7 @@ git clone --depth=1 https://github.com/Doudna-lab/nidali.git
    
    - Linux Install:
 ```
+cd snakedali
 wget https://drive.google.com/drive/folders/117NRrL1iJ4lb_V3tBZzqC79lvkJvE9cS?usp=drive_link
 ```
 
